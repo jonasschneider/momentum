@@ -62,7 +62,7 @@ describe Momentum do
       sleep 1 until is_port_open?('localhost', 5556)
       
       EM.run do
-        Momentum.start_proxy('localhost', 5557)
+        Momentum.start_proxy('localhost', 5556)
         EventMachine::connect 'localhost', 5555, DumbSPDYClient
       end
       

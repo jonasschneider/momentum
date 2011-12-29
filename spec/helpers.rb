@@ -6,6 +6,7 @@ require 'rspec'
 require 'thin/backends/base'
 require 'spdy'
 require 'eventmachine'
+require 'em-http'
 
 require 'socket'
 require 'timeout'

@@ -16,15 +16,21 @@ module Momentum
         logger.info "got a request to #{req.uri}"
         
         #@streams << req
+        reply = @backend.prepare(req)
         
-        status, headers, body = @backend.dispatch(req)
+        reply.on_headers do |headers|
+          send_syn_reply 1, headers
+        end
         
-        send_syn_reply 1, headers
-        
-        body.each do |chunk|
+        reply.on_body do |chunk|
           send_data_frame 1, chunk
         end
-        send_fin 1
+        
+        reply.on_complete do
+          send_fin 1
+        end
+        
+        reply.dispatch!
       end
       
       @parser.on_body             { |stream_id, data| 
