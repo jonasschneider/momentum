@@ -33,7 +33,7 @@ module Momentum
       @env ||= begin
         env = {
           REQUEST_METHOD    => spdy_info[:headers]['method'],
-          SERVER_SOFTWARE   => 'Momentum',
+          SERVER_SOFTWARE   => "Momentum v#{Momentum::VERSION}",
           HTTP_VERSION      => '1.1',
           REMOTE_ADDR       => spdy_info[:remote_addr],
 
