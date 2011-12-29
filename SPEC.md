@@ -1,32 +1,16 @@
-Momentum, a SPDY Server for Rack apps
-========
-
-Momentum is a SPDY server that aims to be drop-in compatible with existing Rack apps,
-and to allow the app to use SPDY features that speed up the response times.
-
-Rack apps can declare the resources the page is going to depend on while rendering the page.
-
-Usage
------
-Momentum is implemented as a thin backend. It does not use much of thin, but the code for
-interacting with the server process (signals, console output) is reused.
-Suppose you have added `momentum` to your app's `Gemfile`, you can start `momentum` by running:
-
-    bundle exec thin start -r momentum -b Momentum::ThinBackend
-
 Backends
 --------
 There are three possible backends:
 
-- `Local` will process the Rack apps in the SPDY server itself.
-- `HTTP` will cause the SPDY server to act as a  SPDY --> HTTP proxy.
+- `LocalRack` will process the Rack apps in the SPDY server itself.
+- `Proxy` will cause the SPDY server to forward requests to a given HTTP server, acting as an HTTP proxy.
   This means that SPDY's long-lived connections can be used to improve loading times.
-- `SpecialHTTP` will fork a custom-protocol server that listens on a Unix socket.
+- `Accelerate` will fork a custom-protocol server that listens on a Unix socket.
   Think unicorn, but without the HTTP parsing. The SPDY server will then fire requests
   at that socket by opening connections. This way, the SPDY `EventMachine` reactor can
   still function while processing Rack apps with quite long response times.
-  The custom-protocol server will respond either directly with the response to the request,
-  and subsequent body chunks, or can prepend to that a number of custom messages.
+  The protocol is custom because besides from regular HTTP responses, special SPDY-related
+  messages may be sent to the SPDY server, such as starting a resource push.
 
 
 Taking advantage of SPDY Server Push
