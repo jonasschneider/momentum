@@ -29,10 +29,10 @@ module Momentum
       if @data.empty?
         send_body chunk, @eof
       else
-        unless @delayed_write_in_progress
-          @delayed_write_in_progress = true
+        unless @chunking_data
+          @chunking_data = true
           EM.next_tick do
-            @delayed_write_in_progress = false
+            @chunking_data = false
             send_data
           end
         end
@@ -43,7 +43,7 @@ module Momentum
     def send_body(chunk, fin = false)
       @session.send_data_frame @stream_id, chunk, fin
       @sent_bytes += chunk.size
-      @session.logger.debug "Stream #{@stream_id} send_body (chunk=#{chunk.size}, fin=#{fin}), #{@sent_bytes} bytes sent"
+      @session.logger.debug "[#{@stream_id}] < chunk=#{chunk.size}, fin=#{fin}, #{@sent_bytes} bytes sent total"
     end
   end
 end
