@@ -3,7 +3,6 @@ require "bundler"
 Bundler.setup
 require 'rspec'
 
-require 'thin/backends/base'
 require 'spdy'
 require 'eventmachine'
 require 'em-http'

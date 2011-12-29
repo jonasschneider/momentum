@@ -22,7 +22,7 @@ shared_examples "Momentum backend" do
         EM.stop
       end
       
-      Timeout::timeout(2) {
+      Timeout::timeout(4) {
         EM.run do
           reply.dispatch!
         end

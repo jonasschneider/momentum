@@ -1,4 +1,3 @@
-require 'thin/backends/base'
 require 'spdy'
 require 'eventmachine'
 require 'em-http'
@@ -9,7 +8,6 @@ require "momentum/version"
 require "momentum/stream"
 require "momentum/request"
 require "momentum/session"
-require "momentum/thin_backend"
 
 require "momentum/backend/base"
 require "momentum/backend/local"
