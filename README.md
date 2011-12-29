@@ -45,8 +45,8 @@ However, no advanced SPDY features like Server Push can be used.
 Note that is is _not_ a SPDY/HTTPS proxy for proxying connections to arbitrary servers
 through a SPDY tunnel as described in http://dev.chromium.org/spdy/spdy-proxy-examples.
 
-*Together with the original HTTP server that is proxied through SPDY, both HTTP and SPDY
-protocols are accessible from the outside.*
+*Together with the original HTTP server, the `Proxy` backend allows the app to be
+accessible through both HTTP and SPDY.*
 
 
 Deployment
