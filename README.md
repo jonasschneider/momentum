@@ -18,9 +18,9 @@ The `momentum` command behaves equivalent to `rackup`, it will try to run a `con
 
 You can also start Momentum from your code:
 
-    Momentum.start(rack_app)
+    Momentum.start(Momentum::Backend::Local.new(rack_app))
 
-This will start Momentum with the `Local` backend (see below).
+This will start Momentum using the `Local` backend (see below).
 
 
 Backends

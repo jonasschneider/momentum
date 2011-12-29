@@ -14,18 +14,12 @@ require "momentum/backend/local"
 require "momentum/backend/proxy"
 
 module Momentum
-  def self.start(app)
+  def self.start(backend)
     EventMachine.start_server('0.0.0.0', 5555, Momentum::Session) do |sess|
-      sess.backend = Backend::Local.new(app)
+      sess.backend = backend
     end
   end
-  
-  def self.start_proxy(host, port)
-    EventMachine.start_server('0.0.0.0', 5555, Momentum::Session) do |sess|
-      sess.backend = Backend::Proxy.new(host, port)
-    end
-  end
-  
+
   LOG_FORMAT = "%s, [%s] %s\n"
   def self.logger
     @logger ||= begin

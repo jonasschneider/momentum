@@ -5,8 +5,7 @@ require "rack"
 
 class DumbSPDYClient < EventMachine::Connection
   class << self
-    attr_accessor :body
-    attr_accessor :body_chunk_count
+    attr_accessor :body, :body_chunk_count, :headers
   end
   
   def post_init
@@ -17,6 +16,10 @@ class DumbSPDYClient < EventMachine::Connection
    @parser.on_body do |id, data|
      @body << data
      @body_chunk_count += 1
+   end
+   
+   @parser.on_headers_complete do |a, s, d, headers|
+     DumbSPDYClient.headers = headers
    end
      
    @parser.on_message_complete do
@@ -44,7 +47,7 @@ describe Momentum do
     app = lambda { |env| [200, {"Content-Type" => "text/plain"}, [response]] }
     
     EM.run do
-      Momentum.start(app)
+      Momentum.start(Momentum::Backend::Local.new(app))
       EventMachine::connect 'localhost', 5555, DumbSPDYClient
     end
     
@@ -57,36 +60,36 @@ describe Momentum do
     app = lambda { |env| [200, {"Content-Type" => "text/plain"}, ['x'*one_chunk*3]] }
     
     EM.run do
-      Momentum.start(app)
+      Momentum.start(Momentum::Backend::Local.new(app))
       EventMachine::connect 'localhost', 5555, DumbSPDYClient
     end
     
     DumbSPDYClient.body_chunk_count.should == 3
   end
   
-  it "works as an HTTP proxy" do
-    begin
-      pid = fork do 
-        Rack::Server.start(
-          :app => lambda do |e|
-            [200, {'Content-Type' => 'text/html'}, [response]]
-          end,
-          :server => 'webrick',
-          :Port => 5556
-        )
-      end
-      
-      sleep 1 until is_port_open?('localhost', 5556)
-      
-      EM.run do
-        Momentum.start_proxy('localhost', 5556)
-        EventMachine::connect 'localhost', 5555, DumbSPDYClient
-      end
-      
-      DumbSPDYClient.body.should == response
-      DumbSPDYClient.body_chunk_count.should == 2
-    ensure
-      Process.kill("KILL", pid)
+  class DummyReply < Momentum::Backend::Base::Reply
+    def initialize(options)
+      @options = options
     end
+    
+    def dispatch!
+      @on_headers.call(@options[:headers] || {})
+      @on_complete.call
+    end
+  end
+  
+  it "passes request & response headers" do
+    backend = Object.new
+    backend.stub(:prepare) do |req|
+      req.headers['accept-encoding'].should == 'gzip,deflate,sdch'
+      DummyReply.new(:headers => {'a' => 'b'})
+    end
+    
+    EM.run do
+      Momentum.start(backend)
+      EventMachine::connect 'localhost', 5555, DumbSPDYClient
+    end
+    
+    DumbSPDYClient.headers['a'].should == 'b'
   end
 end
