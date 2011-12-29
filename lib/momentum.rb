@@ -1,5 +1,7 @@
 require "momentum/version"
 
+require "momentum/stream"
+require "momentum/request"
 require "momentum/session"
 require "momentum/thin_backend"
 

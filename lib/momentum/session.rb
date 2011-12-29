@@ -4,12 +4,21 @@ require 'eventmachine'
 module Momentum
   class Session < ::EventMachine::Connection
     attr_accessor :app
+    
     def initialize(*args)
       super
+      @zlib = SPDY::Zlib.new
+      
       @stream_id = 1
       @parser = ::SPDY::Parser.new
       @parser.on_headers_complete do |stream_id, associated_stream, priority, headers|
-        puts "got a request #{headers.inspect}"
+        req = Request.new(stream_id: stream_id, associated_stream: associated_stream, priority: priority, headers: headers, zlib: @zlib)
+        logger.info "got a request to #{req.uri}"
+        
+        @streams << req
+        
+        send_data req.syn_reply.to_binary_s
+        send_data req.fin_frame.to_binary_s
       end
       
       @parser.on_body             { |stream_id, data| 
@@ -23,26 +32,26 @@ module Momentum
         pong = SPDY::Protocol::Control::Ping.new
         pong.ping_id = id
         send_data pong.to_binary_s
-        logger.debug "PONG #{id}"
       end
 
-      @streams = {}
+      @streams = []
     end
   
     def post_init
-      
       peername = get_peername
       if peername
         @peer = Socket.unpack_sockaddr_in(peername).pop
         logger.info "Connection from: #{@peer}"
       end
     end
+    
+    def send_data(data)
+      logger.debug "<< #{data.inspect}"
+      super
+    end
   
     def receive_data(data)
-      logger.debug "receive_data #{data.size} bytes"
-      if data.size < 20
-        logger.debug data.inspect
-      end
+      logger.debug ">> #{data.inspect}"
       @parser << data
     end
   
