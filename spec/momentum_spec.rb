@@ -1,6 +1,7 @@
 require File.expand_path("../helpers", __FILE__)
 
 require "momentum"
+require "rack"
 
 class DumbSPDYClient < EventMachine::Connection
   class << self
@@ -33,16 +34,42 @@ end
 
 
 describe Momentum do
-  def app
-    lambda { |env| [200, {"Content-Type" => "text/plain"}, ["ohai from the rack app"]] }
-  end
+  let(:response) { "ohai from my app" }
   
-  it "works" do
+  it "works as a simple Rack client" do
+    app = lambda { |env| [200, {"Content-Type" => "text/plain"}, [response]] }
+    
     EM.run do
       Momentum.start(app)
       EventMachine::connect 'localhost', 5555, DumbSPDYClient
     end
     
-    DumbSPDYClient.body.should == 'ohai from the rack app'
+    DumbSPDYClient.body.should == response
+  end
+  
+  it "works as an HTTP proxy" do
+    begin
+      pid = fork do 
+        Rack::Server.start(
+          :app => lambda do |e|
+            [200, {'Content-Type' => 'text/html'}, [response]]
+          end,
+          :server => 'webrick',
+          :Port => 5556
+        )
+      end
+      
+      sleep 1 until is_port_open?('localhost', 5556)
+      
+      EM.run do
+        Momentum.start_proxy('localhost:5557')
+        EventMachine::connect 'localhost', 5555, DumbSPDYClient
+      end
+      
+      DumbSPDYClient.body.should == response
+      
+    ensure
+      Process.kill("KILL", pid)
+    end
   end
 end
