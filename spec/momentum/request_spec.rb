@@ -13,5 +13,11 @@ describe Momentum::Request do
       req = Momentum::Request.new headers: { "a" => "b", "url" => '/', "method" => 'get' }
       req.to_rack_env['HTTP_A'].should == 'b'
     end
+    
+    it "adds the URL to the env" do
+      req = Momentum::Request.new headers: { "a" => "b", "url" => '/favicon.ico', "method" => 'get' }
+      req.to_rack_env['PATH_INFO'].should == '/favicon.ico'
+      req.to_rack_env['SCRIPT_NAME'].should be_nil
+    end
   end
 end

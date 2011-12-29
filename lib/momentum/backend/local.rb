@@ -9,6 +9,8 @@ module Momentum
 
         def dispatch!
           status, headers, body = @app.call(@req.to_rack_env)
+          headers['status'] = status.to_s
+          headers['version'] = 'HTTP/1.1'
           @on_headers.call cleanup_headers(headers) if @on_headers
           
           body.each do |chunk|

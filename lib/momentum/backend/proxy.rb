@@ -13,7 +13,7 @@ module Momentum
           
           http.headers do |headers|
             headers['status'] = headers.http_status
-            headers['version'] = headers.http_status
+            headers['version'] = headers.http_version
             
             @on_headers.call cleanup_headers(headers) if @on_headers
           end

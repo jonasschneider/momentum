@@ -63,8 +63,12 @@ shared_examples "Momentum backend" do
       let(:app) { lambda { |env| [200, {"Content-Type" => "text/plain", 'Me-Pro' => 'Yup'}, ['wayne']] } }
       
       it "passes them on" do
-        puts response_headers.inspect
         response_headers['me-pro'].should == 'Yup'
+      end
+      
+      it "sets :status and :version" do
+        response_headers['status'].should == '200'
+        response_headers['version'].should == 'HTTP/1.1'
       end
     end
 
