@@ -35,10 +35,13 @@ Taking advantage of SPDY Server Push
 The momentum server stores a `Momentum::AppInterface` object in `env['spdy']`.
 `Momentum::AppInterface` provides several methods:
 
-- `add_resource(path)` should be called when the app can safely determine that the resource
+- `hint(url)` (SPDY Server Hint is deprecated?)
+
+- `push(url)` initiates a SPDY push to the client.
+  It should be called when the app can safely determine that the resource
   at `path` is going to be required to render the page.
   
-  The `momentum` server will then start processing the request immediately as if was sent as
+  The SPDY server will then start processing the request immediately as if was sent as
   a separate request by the client.
   The virtual request will look to the application like a normal GET request from the same 
   client. Information that is duplicated from the initial request consists of:
@@ -46,7 +49,3 @@ The momentum server stores a `Momentum::AppInterface` object in `env['spdy']`.
     - User-Agent
   
   Processing of the resource will occur in parallel to the processing of the original request.
-
-Todo
-----
-- Keep a thread pool for secondary requests or something?

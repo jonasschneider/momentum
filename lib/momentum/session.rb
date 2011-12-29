@@ -18,6 +18,7 @@ module Momentum
         @streams << req
         
         send_data req.syn_reply.to_binary_s
+        send_data req.data_frame('yep, that worked').to_binary_s
         send_data req.fin_frame.to_binary_s
       end
       
