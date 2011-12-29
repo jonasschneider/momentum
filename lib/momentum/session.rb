@@ -18,6 +18,13 @@ module Momentum
       @parser.on_message_complete { |stream_id| 
       
       }
+      
+      @parser.on_ping do |id|
+        pong = SPDY::Protocol::Control::Ping.new
+        pong.ping_id = id
+        send_data pong.to_binary_s
+        logger.debug "PONG #{id}"
+      end
 
       @streams = {}
     end
