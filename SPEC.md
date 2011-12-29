@@ -1,21 +1,21 @@
 Backends
 --------
-There are three possible backends:
-
-- `Local` will process the Rack apps in the SPDY server itself.
-- `Proxy` will cause the SPDY server to forward requests to a given HTTP server, acting as an HTTP proxy.
-  This means that SPDY's long-lived connections can be used to improve loading times.
 - `Accelerate` will fork a custom-protocol server that listens on a Unix socket.
   Think unicorn, but without the HTTP parsing. The SPDY server will then fire requests
   at that socket by opening connections. This way, the SPDY `EventMachine` reactor can
   still function while processing Rack apps with quite long response times.
   The protocol is custom because besides from regular HTTP responses, special SPDY-related
   messages may be sent to the SPDY server, such as starting a resource push.
+  
+  HTTP Compliance is then achieved by having a slave HTTP server that forwards requests to
+  the SPDY server.
 
+TODO: Proper proxy headers for the Proxy backend
 
 Taking advantage of SPDY Server Push
 -------------------------------------
 
+Using SPDY Server push requires the `Accelerate` backend.
 The momentum server stores a `Momentum::AppInterface` object in `env['spdy']`.
 `Momentum::AppInterface` provides several methods:
 

@@ -1,4 +1,6 @@
 module Momentum
+  REJECTED_HEADERS = ['Accept-Ranges', 'Connection', 'P3p', 'Ppserver',
+    'Server', 'Transfer-Encoding', 'Vary']
   class Session < ::EventMachine::Connection
     attr_accessor :backend
     
@@ -13,21 +15,43 @@ module Momentum
       @parser = ::SPDY::Parser.new
       @parser.on_headers_complete do |stream_id, associated_stream, priority, headers|
         req = Request.new(stream_id: stream_id, associated_stream: associated_stream, priority: priority, headers: headers, zlib: @zlib)
-        logger.info "got a request to #{req.uri}"
+        logger.info "got a request to #{req.uri} => #{headers.inspect}"
+        
+        send_buffer = ''
         
         #@streams << req
         reply = @backend.prepare(req)
         
         reply.on_headers do |headers|
-          send_syn_reply 1, headers
+          hdrs = headers.inject(Hash.new) do |hash,kv|
+            hash[kv[0].downcase.gsub('_', '-')] = kv[1]
+            hash
+          end
+          #hdrs.http_reason = headers.http_reason
+          #hdrs.http_status = headers.http_status
+          #if cookie = hdrs['Set-Cookie'] and cookie.respond_to?(:join)
+          #  hdrs['Set-Cookie'] = cookie.join(', ')
+          #end
+          hdrs.each {|k,v| hdrs[k] = v.first if v.respond_to?(:first)}
+          # Remove junk headers
+          hdrs.reject! {|hdr| hdr.start_with?('X-')}
+          hdrs.reject! {|hdr| REJECTED_HEADERS.include? hdr}
+          hdrs.reject! {|hdr,val| val.empty?}
+          
+          logger.debug "response headers: #{hdrs.inspect}"
+          send_syn_reply stream_id, hdrs
         end
+        stream = Stream.new stream_id, self
         
         reply.on_body do |chunk|
-          send_data_frame 1, chunk
+          # Spdy.logger.debug "Stream #{@stream_id} send_data (data=#{@data.size})"
+          #send_buffer << chunk
+          stream.write chunk
+          
         end
         
         reply.on_complete do
-          send_fin 1
+          stream.eof!
         end
         
         reply.dispatch!
@@ -58,23 +82,21 @@ module Momentum
     end
     
     def send_data(data)
-      logger.debug "<< #{data.inspect}"
+      #logger.debug "<< #{data.inspect}"
       super
     end
   
     def receive_data(data)
-      logger.debug ">> #{data.inspect}"
+      #logger.debug ">> #{data.inspect}"
       @parser << data
     end
-  
-    protected
     
     def send_syn_reply(stream, headers)
       send_data @sr.create({:stream_id => stream, :headers => headers}).to_binary_s
     end
     
-    def send_data_frame(stream, data)
-      send_data @df.create(:stream_id => stream, :data => data).to_binary_s
+    def send_data_frame(stream, data, fin = false)
+      send_data @df.create(:stream_id => stream, :data => data, :flags => (fin ? 1 : 0)).to_binary_s
     end
     
     def send_fin(stream)

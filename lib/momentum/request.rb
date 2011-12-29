@@ -25,6 +25,10 @@ module Momentum
       @spdy_info = spdy_info
     end
     
+    def headers
+      spdy_info[:headers]
+    end
+    
     def to_rack_env
       @env ||= begin
         env = {
