@@ -1,5 +1,3 @@
-require "thin/backends/base"
-
 module Momentum
   class ThinBackend < Thin::Backends::Base
     def initialize(host, port, options)

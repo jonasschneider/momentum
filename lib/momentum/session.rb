@@ -1,6 +1,3 @@
-require 'spdy'
-require 'eventmachine'
-
 module Momentum
   class Session < ::EventMachine::Connection
     attr_accessor :app
@@ -17,8 +14,12 @@ module Momentum
         
         @streams << req
         
+        status, headers, body = @app.call(req.env)
+        
         send_data req.syn_reply.to_binary_s
-        send_data req.data_frame('yep, that worked').to_binary_s
+        body.each do |chunk|
+          send_data req.data_frame(chunk).to_binary_s
+        end
         send_data req.fin_frame.to_binary_s
       end
       

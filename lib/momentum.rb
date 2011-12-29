@@ -1,11 +1,14 @@
-require "momentum/version"
+require 'thin/backends/base'
+require 'spdy'
+require 'eventmachine'
 
+require "logger"
+
+require "momentum/version"
 require "momentum/stream"
 require "momentum/request"
 require "momentum/session"
 require "momentum/thin_backend"
-
-require "logger"
 
 module Momentum
   LOG_FORMAT = "%s, [%s] %s\n"

@@ -27,6 +27,6 @@ watch("lib/(.*/*)\.rb") do |match|
   if File.exists?(p = "spec/"+match[1]+"_spec.rb")
     spec(p)
   else
-    spec("spec/fog/external/storage_spec.rb")
+    spec("spec/momentum_spec.rb")
   end
 end

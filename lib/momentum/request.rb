@@ -44,7 +44,7 @@ module Momentum
           QUERY_STRING      => uri.query || '',
           RACK_INPUT        => StringIO.new(options[:body] || ''.force_encoding('ASCII-8BIT'))
         }
-        headers.each do |k,v|
+        options[:headers].each do |k,v|
           key = k.gsub('-', '_').upcase
           unless key == 'CONTENT_TYPE' || key == 'CONTENT_LENGTH'
             key = 'HTTP_' + key
