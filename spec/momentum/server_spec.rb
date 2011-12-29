@@ -1,5 +1,6 @@
-require "momentum"
 require File.expand_path("../../helpers", __FILE__)
+
+require "momentum"
 
 class DumbSPDYClient < EventMachine::Connection
   class << self
@@ -35,11 +36,11 @@ describe Momentum do
   it "works" do
     EM.run do
       EventMachine.start_server('localhost', 5555, Momentum::Session) do |sess|
-        sess.app = lambda { |env| [200, {"Content-Type" => "text/plain"}, ["ohai"]] }
+        sess.app = lambda { |env| [200, {"Content-Type" => "text/plain"}, ["ohai from the rack app"]] }
       end
       EventMachine::connect 'localhost', 5555, DumbSPDYClient
     end
     
-    DumbSPDYClient.body.should == 'yep, that worked'
+    DumbSPDYClient.body.should == 'ohai from the rack app'
   end
 end
