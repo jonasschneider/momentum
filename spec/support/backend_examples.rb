@@ -29,6 +29,16 @@ shared_examples "Momentum backend" do
       }
     end
     
+    def response_headers
+      {}.tap do |headers|
+        reply.on_headers do |h|
+          headers.merge!(h)
+        end
+        
+        dispatch!
+      end
+    end
+    
     def response_body
       ''.tap do |data|
         reply.on_body do |c|
@@ -39,16 +49,25 @@ shared_examples "Momentum backend" do
       end
     end
     
-    context "with additional headers" do
+    context "request headers" do
       let(:app) { lambda { |env| [200, {"Content-Type" => "text/plain"}, [env['HTTP_ME_PRO'].inspect]] } }
       let(:headers) { { :url => '/', 'Me-pro' => 'Yup' } }
       let(:rack_env) { { "HTTP_ME_PRO" => 'Yup' } }
       
-      it "passes headers" do
+      it "passes them on" do
         response_body.should == '"Yup"'
       end
     end
-    
+
+    context "response headers" do
+      let(:app) { lambda { |env| [200, {"Content-Type" => "text/plain", 'Me-Pro' => 'Yup'}, ['wayne']] } }
+      
+      it "passes them on" do
+        puts response_headers.inspect
+        response_headers['me-pro'].should == 'Yup'
+      end
+    end
+
     describe "#body" do
       it "fetches the response body" do
         response_body.should == response

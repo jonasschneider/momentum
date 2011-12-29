@@ -11,18 +11,14 @@ module Momentum
 
           http = EventMachine::HttpRequest.new(url).get :head => @req.headers
           
-          
           http.headers do |headers|
             headers['status'] = headers.http_status
             headers['version'] = headers.http_status
             
-            @on_headers.call(headers) if @on_headers
+            @on_headers.call cleanup_headers(headers) if @on_headers
           end
-          sent_bytes = 0
           
           http.stream do |chunk|
-            sent_bytes += chunk.size
-            puts "#{sent_bytes} bytes sent from http"
             @on_body.call(chunk) if @on_body
           end
           

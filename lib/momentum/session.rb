@@ -23,23 +23,10 @@ module Momentum
         reply = @backend.prepare(req)
         
         reply.on_headers do |headers|
-          hdrs = headers.inject(Hash.new) do |hash,kv|
-            hash[kv[0].downcase.gsub('_', '-')] = kv[1]
-            hash
-          end
-          #hdrs.http_reason = headers.http_reason
-          #hdrs.http_status = headers.http_status
-          #if cookie = hdrs['Set-Cookie'] and cookie.respond_to?(:join)
-          #  hdrs['Set-Cookie'] = cookie.join(', ')
-          #end
-          hdrs.each {|k,v| hdrs[k] = v.first if v.respond_to?(:first)}
-          # Remove junk headers
-          hdrs.reject! {|hdr| hdr.start_with?('X-')}
-          hdrs.reject! {|hdr| REJECTED_HEADERS.include? hdr}
-          hdrs.reject! {|hdr,val| val.empty?}
           
-          logger.debug "response headers: #{hdrs.inspect}"
-          send_syn_reply stream_id, hdrs
+          
+          logger.debug "response headers: #{headers.inspect}"
+          send_syn_reply stream_id, headers
         end
         stream = Stream.new stream_id, self
         
