@@ -14,6 +14,10 @@ Suppose you have added `momentum` to your app's `Gemfile`, you can start `moment
 
     bundle exec thin start -r momentum -b Momentum::ThinBackend
 
+You can also start Momentum from your code:
+
+    Momentum.start(rack_app_)
+
 Credits
 -------
 Code parts are borrowed from `https://github.com/romanbsd/spdy`
