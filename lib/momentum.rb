@@ -11,6 +11,14 @@ require "momentum/session"
 require "momentum/thin_backend"
 
 module Momentum
+  def self.start(app)
+    EventMachine.start unless EventMachine.reactor_running?
+    
+    EventMachine.start_server('localhost', 5555, Momentum::Session) do |sess|
+      sess.app = app
+    end
+  end
+  
   LOG_FORMAT = "%s, [%s] %s\n"
   def self.logger
     @logger ||= begin

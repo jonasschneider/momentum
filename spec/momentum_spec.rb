@@ -33,11 +33,13 @@ end
 
 
 describe Momentum do
+  def app
+    lambda { |env| [200, {"Content-Type" => "text/plain"}, ["ohai from the rack app"]] }
+  end
+  
   it "works" do
     EM.run do
-      EventMachine.start_server('localhost', 5555, Momentum::Session) do |sess|
-        sess.app = lambda { |env| [200, {"Content-Type" => "text/plain"}, ["ohai from the rack app"]] }
-      end
+      Momentum.start(app)
       EventMachine::connect 'localhost', 5555, DumbSPDYClient
     end
     
