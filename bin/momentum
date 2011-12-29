@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+require "momentum"
+require "rack"
+
+EM.run {
+  Momentum.start(Rack::Server.new.app)
+  puts ">> Momentum running on 0.0.0.0:5555"
+  trap(:INT) {
+    puts ">> Exiting."
+    EventMachine::stop_event_loop
+  }
+}

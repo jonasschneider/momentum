@@ -10,11 +10,11 @@ Rack apps can declare the resources the page is going to depend on while renderi
 Usage
 -----
 
-Momentum is implemented as a thin backend. It does not use much of thin, but the code for
-interacting with the server process (signals, console output) is reused.
 Suppose you have added `momentum` to your app's `Gemfile`, you can start `momentum` by running:
 
-    bundle exec thin start -r momentum -b Momentum::ThinBackend
+    bundle exec momentum
+  
+The `momentum` command behaves equivalent to `rackup`, it will try to run a `config.ru` file in the current directory.
 
 You can also start Momentum from your code:
 
