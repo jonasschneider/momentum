@@ -10,12 +10,23 @@ require "momentum/request"
 require "momentum/session"
 require "momentum/thin_backend"
 
+require "momentum/backend/local"
+require "momentum/backend/proxy"
+
 module Momentum
   def self.start(app)
     EventMachine.start unless EventMachine.reactor_running?
     
     EventMachine.start_server('localhost', 5555, Momentum::Session) do |sess|
-      sess.app = app
+      sess.backend = Backend::Local.new(app)
+    end
+  end
+  
+  def self.start_proxy(host, port)
+    EventMachine.start unless EventMachine.reactor_running?
+    
+    EventMachine.start_server('localhost', 5555, Momentum::Session) do |sess|
+      sess.backend = Backend::Proxy.new(host, port)
     end
   end
   

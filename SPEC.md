@@ -2,7 +2,7 @@ Backends
 --------
 There are three possible backends:
 
-- `LocalRack` will process the Rack apps in the SPDY server itself.
+- `Local` will process the Rack apps in the SPDY server itself.
 - `Proxy` will cause the SPDY server to forward requests to a given HTTP server, acting as an HTTP proxy.
   This means that SPDY's long-lived connections can be used to improve loading times.
 - `Accelerate` will fork a custom-protocol server that listens on a Unix socket.
