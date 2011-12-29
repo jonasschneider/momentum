@@ -8,10 +8,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Jonas Schneider"]
   s.email       = ["mail@jonasschneider.com"]
   s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
-
-  s.rubyforge_project = "momentum"
+  s.summary     = %q{A SPDY Server for Rack apps.}
+  s.description = %q{Momentum is a SPDY server that aims to be drop-in compatible with existing Rack apps.}
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
