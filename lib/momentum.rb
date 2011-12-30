@@ -9,6 +9,7 @@ require "momentum/stream"
 require "momentum/request"
 require "momentum/session"
 
+require "momentum/app_delegate"
 require "momentum/backend"
 require "momentum/adapters/proxy"
 

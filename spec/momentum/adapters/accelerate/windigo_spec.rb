@@ -78,4 +78,35 @@ describe Accelerate::Windigo do
       f[:body].should == 'test'
     end
   end
+  
+  context "SPDY Server Push" do
+    class PushingApp
+      def self.call(env)
+        if env['spdy']
+          env['spdy'].push('/application.js')
+        end
+        [200, {"Content-Type" => "text/plain"}, ['ohai', 'test']]
+      end
+    end
+    let(:app) { PushingApp }
+
+    it "returns the body" do
+      send_request!
+      read_frame # skip one
+      f = read_frame
+      f[:type].should == Accelerate::Windigo::BODY_CHUNK
+      f[:body].should == 'ohai'
+      
+      f = read_frame
+      f[:type].should == Accelerate::Windigo::BODY_CHUNK
+      f[:body].should == 'test'
+    end
+    
+    it "prepends a SPDY push frame" do
+      send_request!
+      f = read_frame
+      f[:type].should == Accelerate::Windigo::SPDY_PUSH
+      f[:body].should == '/application.js'
+    end
+  end
 end
