@@ -7,7 +7,9 @@ module Momentum
         end
 
         def dispatch!
-          url = "http://#{@host}:#{@port}#{@req.uri}"
+          url = @req.uri.dup
+          url.host = @host
+          url.port = @port
 
           http = EventMachine::HttpRequest.new(url).get :head => @req.headers
           
