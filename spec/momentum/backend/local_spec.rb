@@ -8,7 +8,15 @@ describe Momentum::Backend::Local do
 
   include_examples "Momentum backend"
 
-  context "async.callback" do
+  context "env['momentum.request']" do
+    let(:app) { lambda { |env| [200, {"Content-Type" => "text/plain"}, [env['momentum.request'].inspect]] } }
+    
+    it "contains the request" do
+      response_body.should == request.inspect
+    end
+  end
+
+  context "env['async.callback']" do
     class DeferrableBody
       include EventMachine::Deferrable
      

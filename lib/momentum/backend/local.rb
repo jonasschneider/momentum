@@ -14,6 +14,8 @@ module Momentum
           env['async.callback'] = lambda {|response|
             process_response(response)
           }
+          env['momentum.request'] = @req
+          
           response = AsyncResponse
           catch(:async)  do
             response = @app.call(env)
