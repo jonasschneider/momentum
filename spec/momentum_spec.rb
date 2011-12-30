@@ -47,7 +47,7 @@ describe Momentum do
     app = lambda { |env| [200, {"Content-Type" => "text/plain"}, [response]] }
     
     EM.run do
-      Momentum.start(Momentum::Backend::Local.new(app))
+      Momentum.start(Momentum::Backend.new(app))
       EventMachine::connect 'localhost', 5555, DumbSPDYClient
     end
     
@@ -60,14 +60,14 @@ describe Momentum do
     app = lambda { |env| [200, {"Content-Type" => "text/plain"}, ['x'*one_chunk*3]] }
     
     EM.run do
-      Momentum.start(Momentum::Backend::Local.new(app))
+      Momentum.start(Momentum::Backend.new(app))
       EventMachine::connect 'localhost', 5555, DumbSPDYClient
     end
     
     DumbSPDYClient.body_chunk_count.should == 3
   end
   
-  class DummyReply < Momentum::Backend::Base::Reply
+  class DummyReply < Momentum::Backend::Reply
     def initialize(options)
       @options = options
     end

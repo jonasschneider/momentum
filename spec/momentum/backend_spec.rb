@@ -1,11 +1,11 @@
-require File.expand_path("../../../support/helpers", __FILE__)
-require File.expand_path("../../../support/backend_examples", __FILE__)
+require File.expand_path("../../support/helpers", __FILE__)
+require File.expand_path("../../support/backend_examples", __FILE__)
 
 require "momentum"
 
-describe Momentum::Backend::Local do
+describe Momentum::Backend do
   let(:app) { lambda { |env| [given_response_status, given_response_headers, [given_response_body]] } }
-  let(:backend) { Momentum::Backend::Local.new(app) }
+  let(:backend) { Momentum::Backend.new(app) }
 
   include_examples "Momentum backend"
 

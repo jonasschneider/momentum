@@ -9,9 +9,8 @@ require "momentum/stream"
 require "momentum/request"
 require "momentum/session"
 
-require "momentum/backend/base"
-require "momentum/backend/local"
-require "momentum/backend/proxy"
+require "momentum/backend"
+require "momentum/adapters/proxy"
 
 module Momentum
   def self.start(backend)

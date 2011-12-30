@@ -1,5 +1,5 @@
 module Momentum
-  module Backend
+  module Adapters
     class Proxy
       class Body
         include EventMachine::Deferrable
