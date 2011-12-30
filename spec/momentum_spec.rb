@@ -42,8 +42,26 @@ end
 
 describe Momentum do
   let(:response) { "ohai from my app" }
+
+  it "also accepts a Rack app instead of a backend" do
+    app = lambda { |env| [200, {"Content-Type" => "text/plain"}, [response]] }
+    
+    EM.run do
+      Momentum.start(app)
+      EventMachine::connect 'localhost', 5555, DumbSPDYClient
+    end
+    
+    DumbSPDYClient.body.should == response
+    DumbSPDYClient.body_chunk_count.should == 2 # data and separate FIN
+  end
   
-  it "works as a simple Rack client" do
+  it "throws when something else is passed" do
+    lambda {
+      Momentum.start("test")
+    }.should raise_error
+  end
+  
+  it "works as a SPDY Rack server" do
     app = lambda { |env| [200, {"Content-Type" => "text/plain"}, [response]] }
     
     EM.run do

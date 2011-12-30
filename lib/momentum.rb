@@ -13,7 +13,12 @@ require "momentum/backend"
 require "momentum/adapters/proxy"
 
 module Momentum
-  def self.start(backend)
+  def self.start(backend_or_app)
+    if backend_or_app.respond_to? :prepare
+      backend = backend_or_app
+    elsif backend_or_app.respond_to? :call
+      backend = Momentum::Backend.new(backend_or_app)
+    end
     EventMachine.start_server('0.0.0.0', 5555, Momentum::Session) do |sess|
       sess.backend = backend
     end
