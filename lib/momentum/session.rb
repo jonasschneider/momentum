@@ -100,7 +100,7 @@ module Momentum
     
     def send_data_frame(stream, data, fin = false)
       flags = (fin ? 1 : 0)
-      logger.debug "< DATA stream=#{stream}, len=#{data.size}, flags=#{flags}"
+      logger.debug "< DATA stream=#{stream}, len=#{data.size}, flags=#{flags}" if trace?
       send_data @df.create(:stream_id => stream, :data => data, :flags => flags).to_binary_s
     end
     
