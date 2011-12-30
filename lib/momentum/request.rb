@@ -37,36 +37,34 @@ module Momentum
     end
     
     def to_rack_env
-      @env ||= begin
-        env = {
-          REQUEST_METHOD    => spdy_info[:headers]['method'],
-          SERVER_SOFTWARE   => "Momentum v#{Momentum::VERSION}",
-          HTTP_VERSION      => '1.1',
-          REMOTE_ADDR       => spdy_info[:remote_addr],
+      env = {
+        REQUEST_METHOD    => spdy_info[:headers]['method'],
+        SERVER_SOFTWARE   => "Momentum v#{Momentum::VERSION}",
+        HTTP_VERSION      => '1.1',
+        REMOTE_ADDR       => spdy_info[:remote_addr],
 
-          RACK_VERSION      => [1,1],
-          RACK_ERRORS       => STDERR,
-          RACK_SCHEME       => spdy_info[:headers]['scheme'],
-          RACK_MULTITHREAD  => true,
-          RACK_MULTIPROCESS => false,
-          RACK_RUN_ONCE     => false,
+        RACK_VERSION      => [1,1],
+        RACK_ERRORS       => STDERR,
+        RACK_SCHEME       => spdy_info[:headers]['scheme'],
+        RACK_MULTITHREAD  => true,
+        RACK_MULTIPROCESS => false,
+        RACK_RUN_ONCE     => false,
 
-          SCRIPT_NAME       => '',
-          SERVER_NAME       => uri.host || 'localhost',
-          SERVER_PORT       => uri.port.to_s,
-          PATH_INFO         => uri.path,
-          QUERY_STRING      => uri.query || '',
-          RACK_INPUT        => StringIO.new(spdy_info[:body] || ''.force_encoding('ASCII-8BIT'))
-        }
-        spdy_info[:headers].each do |k,v|
-          key = k.gsub('-', '_').upcase
-          unless key == 'CONTENT_TYPE' || key == 'CONTENT_LENGTH'
-            key = 'HTTP_' + key
-          end
-          env[key] = v
+        SCRIPT_NAME       => '',
+        SERVER_NAME       => uri.host || 'localhost',
+        SERVER_PORT       => uri.port.to_s,
+        PATH_INFO         => uri.path,
+        QUERY_STRING      => uri.query || '',
+        RACK_INPUT        => StringIO.new(spdy_info[:body] || ''.force_encoding('ASCII-8BIT'))
+      }
+      spdy_info[:headers].each do |k,v|
+        key = k.gsub('-', '_').upcase
+        unless key == 'CONTENT_TYPE' || key == 'CONTENT_LENGTH'
+          key = 'HTTP_' + key
         end
-        env
+        env[key] = v
       end
+      env
     end
     
     def uri
