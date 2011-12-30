@@ -24,7 +24,7 @@ module Momentum
       end
       
       def _call(env)
-        req = env['momentum.request']
+        req = env['spdy'].momentum_request
         
         url = req.uri.dup
         url.host = @host

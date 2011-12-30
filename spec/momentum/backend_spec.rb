@@ -9,8 +9,8 @@ describe Momentum::Backend do
 
   include_examples "Momentum backend"
 
-  context "env['momentum.request']" do
-    let(:app) { lambda { |env| [200, {"Content-Type" => "text/plain"}, [env['momentum.request'].inspect]] } }
+  context "env['spdy'].momentum_request" do
+    let(:app) { lambda { |env| [200, {"Content-Type" => "text/plain"}, [env['spdy'].momentum_request.inspect]] } }
     
     it "contains the request" do
       response_body.should == request.inspect

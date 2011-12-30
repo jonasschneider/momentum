@@ -1,5 +1,12 @@
 module Momentum
   class Backend
+    class EnvSpdyInterface
+      attr_reader :momentum_request
+
+      def initialize(momentum_request)
+        @momentum_request = momentum_request
+      end
+    end
     class Reply
       AsyncResponse = [-1, {}, []].freeze
       
@@ -26,7 +33,7 @@ module Momentum
         env['async.callback'] = lambda {|response|
           process_response(response)
         }
-        env['momentum.request'] = @req
+        env['spdy'] = EnvSpdyInterface.new(@req)
         
         response = AsyncResponse
         catch(:async)  do
