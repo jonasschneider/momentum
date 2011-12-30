@@ -43,7 +43,7 @@ module Momentum
     def send_body(chunk, fin = false)
       @session.send_data_frame @stream_id, chunk, fin
       @sent_bytes += chunk.size
-      @session.logger.debug "[#{@stream_id}] < chunk=#{chunk.size}, fin=#{fin}, #{@sent_bytes} bytes sent total"
+      @session.logger.debug "[#{@stream_id}] sending chunk of #{chunk.size}, fin=#{fin}, #{@sent_bytes} bytes sent total"
     end
   end
 end
