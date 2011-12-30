@@ -2,8 +2,8 @@ require "timeout"
 
 shared_examples "Momentum backend" do 
   let(:rack_env) { given_request_headers }
-  
-  let(:given_request_headers) { { 'method' => 'get', 'version' => 'HTTP/1.1', 'url' => '/', 'host' => 'localhost', 'scheme' => 'http' } }
+  let(:valid_request_headers) { { 'method' => 'get', 'version' => 'HTTP/1.1', 'url' => '/', 'host' => 'localhost', 'scheme' => 'http' } }
+  let(:given_request_headers) { valid_request_headers }
   
   let(:given_response_status) { 200 }
   let(:given_response_body) { 'hello from my rack app' }
@@ -56,12 +56,13 @@ shared_examples "Momentum backend" do
   end
   
   context "request headers" do
-    let(:given_request_headers) { {'a' => 'b'} }
+    let(:given_request_headers) { valid_request_headers.merge({'a' => 'b'}) }
     
     it "passes them on" do
       dispatch!
       # This will still break the Proxy if it fails to pass the headers because only the given_headers are webmocked.
       # Since Proxy depends on Local, all is well... this still sucks.
+      # FIXME
     end
   end
 
