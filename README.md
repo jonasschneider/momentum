@@ -68,4 +68,5 @@ http://mbelshe.github.com/SPDY-Specification/draft-mbelshe-spdy-00.xml
 
 Credits
 -------
-Inspired by https://github.com/romanbsd/spdy.
+Thanks to Ilya Grigorik for the great [SPDY parser gem](https://github.com/igrigorik/spdy).
+Inspired by Roman Shterenzon's [SPDY server](https://github.com/romanbsd/spdy).
