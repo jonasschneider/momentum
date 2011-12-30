@@ -78,12 +78,12 @@ module Momentum
         if is_http?(data)
           send_data HTTP_RESPONSE
           close_connection_after_writing
+          return
         else
           @could_be_http = false 
         end
-      else
-        @parser << data
       end
+      @parser << data
     end
     
     def is_http?(data)
