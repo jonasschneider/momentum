@@ -27,6 +27,7 @@ describe Accelerate::Windigo do
     
     @pid = fork do
       server.start
+      exit
     end
   end
   
