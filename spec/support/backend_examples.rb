@@ -28,7 +28,7 @@ shared_examples "Momentum backend" do
     }
     
   ensure
-    EM.stop
+    EM.stop if EM.reactor_running?
   end
   
   def response_headers
