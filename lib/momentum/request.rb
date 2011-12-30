@@ -7,6 +7,7 @@ module Momentum
     REQUEST_METHOD    = 'REQUEST_METHOD'.freeze
     SERVER_NAME       = 'SERVER_NAME'.freeze
     SERVER_PORT       = 'SERVER_PORT'.freeze
+    SCRIPT_NAME       = 'SCRIPT_NAME'.freeze
     SERVER_SOFTWARE   = 'SERVER_SOFTWARE'.freeze
     HTTP_VERSION      = 'HTTP_VERSION'.freeze
     REMOTE_ADDR       = 'REMOTE_ADDR'.freeze
@@ -39,11 +40,12 @@ module Momentum
 
           RACK_VERSION      => [1,1],
           RACK_ERRORS       => STDERR,
-          RACK_SCHEME       => 'http', # TODO: SSL
+          RACK_SCHEME       => spdy_info[:headers]['scheme'],
           RACK_MULTITHREAD  => true,
           RACK_MULTIPROCESS => false,
           RACK_RUN_ONCE     => false,
 
+          SCRIPT_NAME       => '',
           SERVER_NAME       => uri.host || 'localhost',
           SERVER_PORT       => uri.port.to_s,
           PATH_INFO         => uri.path,
@@ -62,7 +64,14 @@ module Momentum
     end
     
     def uri
-      @uri ||= URI.parse(spdy_info[:headers]['url'])
+      @uri ||= URI.parse(spdy_info[:headers]['scheme'] +  '://' + spdy_info[:headers]['host'] + requested_path)
+    end
+    protected
+    
+    def requested_path
+      # Chrome 16 seems to fail the spec here - :url is sent there instead of :path. Fix that.
+      # spdy_info[:headers]['path']
+      spdy_info[:headers]['url']
     end
   end
 end
