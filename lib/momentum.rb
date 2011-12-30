@@ -12,6 +12,12 @@ require "momentum/session"
 require "momentum/backend"
 require "momentum/adapters/proxy"
 
+require 'socket'
+require 'unicorn'
+require "momentum/adapters/accelerate"
+require "momentum/adapters/accelerate/windigo"
+
+
 module Momentum
   REJECTED_HEADERS = ['Accept-Ranges', 'Connection', 'P3p', 'Ppserver',
     'Server', 'Transfer-Encoding', 'Vary']
