@@ -4,6 +4,7 @@ require File.expand_path("../../../support/backend_examples", __FILE__)
 require "momentum"
 
 describe Momentum::Backend::Local do
+  let(:app) { lambda { |env| [given_response_status, given_response_headers, [given_response_body]] } }
   let(:backend) { Momentum::Backend::Local.new(app) }
 
   include_examples "Momentum backend"

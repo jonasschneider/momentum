@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   
   s.add_development_dependency "rspec"
-  s.add_development_dependency "rake"
+  s.add_development_dependency "webmock"
 
   s.add_runtime_dependency "rack"
   s.add_runtime_dependency "eventmachine", "~> 0.12.10"

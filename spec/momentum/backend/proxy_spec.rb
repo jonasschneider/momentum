@@ -3,24 +3,17 @@ require File.expand_path("../../../support/backend_examples", __FILE__)
 
 require "momentum"
 require "rack"
+require 'webmock/rspec'
 
 describe Momentum::Backend::Proxy do
-  after(:each) do
-    Process.kill "KILL", @server_pid if @server_pid
-  end
-
   let(:backend) do
-    @server_pid = fork do 
-      Rack::Server.start(
-        :app => app,
-        :server => 'webrick',
-        :Port => 5556
-      )
-    end
-    sleep 0.1 until is_port_open?('localhost', 5556)
-    
-    Momentum::Backend::Proxy.new('localhost', 5556)
-  end
+    stub_request(:get, "http://localhost:5556/").
+      with(:headers => given_request_headers).
+      to_return(:status => given_response_status, :body => given_response_body, :headers => given_response_headers)
 
+    app = Momentum::Backend::Proxy.new('localhost', 5556)
+    Momentum::Backend::Local.new(app)
+  end
+  
   include_examples "Momentum backend"
 end
