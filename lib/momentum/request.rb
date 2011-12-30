@@ -19,11 +19,17 @@ module Momentum
     RACK_MULTIPROCESS = 'rack.multiprocess'.freeze
     RACK_RUN_ONCE     = 'rack.run_once'.freeze
     RACK_SCHEME       = 'rack.url_scheme'.freeze
+    
+    REQUIRED          = %w(method version host scheme) # spec says include path here, but don't as Chrome doesn't send it
 
     # spdy_info[:headers] is a hash mapping strings to strings, containing the http headers from the SPDY request.
     # spdy_info[:remote_addr] is the remote IP address
     def initialize(spdy_info)
       @spdy_info = spdy_info
+      REQUIRED.each do |header|
+        raise "#{header} is required" if headers[header].nil?
+      end
+      raise "need either path or url" if headers['path'].nil? && headers['url'].nil?
     end
     
     def headers
@@ -70,8 +76,7 @@ module Momentum
     
     def requested_path
       # Chrome 16 seems to fail the spec here - :url is sent there instead of :path. Fix that.
-      # spdy_info[:headers]['path']
-      spdy_info[:headers]['url']
+      spdy_info[:headers]['path'] || spdy_info[:headers]['url']
     end
   end
 end
