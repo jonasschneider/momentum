@@ -38,7 +38,7 @@ This backend provides functionality for deferred/asynchronous responses.
 This works just like in a `Thin` environment: throwing `:async` will cause the
 header reply to be postponed. Calling the proc stored in `env['async.callback']`
 will send the headers. If you provide a body with callback functionality, you can
-even use deferred bodies. [See here for an example from Thin.](thin_async)
+even use deferred bodies. [See here for an example from Thin.][thin_async]
 
 
 *This backend is to be used for testing only, as it provides no HTTP fallback.*
