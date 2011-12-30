@@ -70,12 +70,12 @@ module Momentum
     end
     
     def send_data(data)
-      logger.debug "<< #{hex data[0..19]} (len=#{data.size}, first 20 shown)"
+      logger.debug "<< #{hex data[0..19]} (len=#{data.size}, first 20 shown)" if trace?
       super(data)
     end
   
     def receive_data(data)
-      logger.debug ">> #{hex data}"
+      logger.debug ">> #{hex data}" if trace?
       puts "done"
       @parser << data
     end
@@ -97,6 +97,10 @@ module Momentum
     
     def unbind
       logger.info "CONNECTION CLOSED"
+    end
+    
+    def trace?
+      ENV["TRACE"]
     end
     
     def logger
