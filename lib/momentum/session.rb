@@ -70,29 +70,41 @@ module Momentum
     end
     
     def send_data(data)
-      #logger.debug "<< #{data.inspect}"
-      super
+      logger.debug "<< #{hex data[0..19]} (len=#{data.size}, first 20 shown)"
+      super(data)
     end
   
     def receive_data(data)
-      #logger.debug ">> #{data.inspect}"
+      logger.debug ">> #{hex data}"
+      puts "done"
       @parser << data
     end
     
     def send_syn_reply(stream, headers)
+      logger.debug "< SYN_REPLY stream=#{stream}"
       send_data @sr.create({:stream_id => stream, :headers => headers}).to_binary_s
     end
     
     def send_data_frame(stream, data, fin = false)
-      send_data @df.create(:stream_id => stream, :data => data, :flags => (fin ? 1 : 0)).to_binary_s
+      flags = (fin ? 1 : 0)
+      logger.debug "< DATA stream=#{stream}, len=#{data.size}, flags=#{flags}"
+      send_data @df.create(:stream_id => stream, :data => data, :flags => flags).to_binary_s
     end
     
     def send_fin(stream)
-      send_data @df.create(:stream_id => stream, :flags => 1, :data => '').to_binary_s
+      send_data_frame(stream, '', true)
+    end
+    
+    def unbind
+      logger.info "CONNECTION CLOSED"
     end
     
     def logger
       Momentum.logger
+    end
+    
+    def hex(data)
+      data.unpack("C*").map{|i| i.to_s(16).rjust(2, '0')}.join(' ')
     end
   end
 end
