@@ -53,7 +53,7 @@ module Momentum
         @on_headers.call cleanup_response_headers(headers) if @on_headers
         
         body.each do |chunk|
-          @on_body.call(chunk) if @on_body
+          @on_body.call(chunk.to_s) if @on_body
         end
         
         if body.respond_to?(:callback) && body.respond_to?(:errback)
