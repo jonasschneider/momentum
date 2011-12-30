@@ -13,6 +13,9 @@ require "momentum/backend"
 require "momentum/adapters/proxy"
 
 module Momentum
+  REJECTED_HEADERS = ['Accept-Ranges', 'Connection', 'P3p', 'Ppserver',
+    'Server', 'Transfer-Encoding', 'Vary']
+
   def self.start(backend_or_app)
     if backend_or_app.respond_to? :prepare
       backend = backend_or_app

@@ -1,6 +1,4 @@
 module Momentum
-  REJECTED_HEADERS = ['Accept-Ranges', 'Connection', 'P3p', 'Ppserver',
-    'Server', 'Transfer-Encoding', 'Vary']
   class Session < ::EventMachine::Connection
     attr_accessor :backend
     

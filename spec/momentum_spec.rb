@@ -1,4 +1,5 @@
 require File.expand_path("../support/helpers", __FILE__)
+require File.expand_path("../support/dummy_backend_response", __FILE__)
 
 require "momentum"
 require "rack"
@@ -85,22 +86,11 @@ describe Momentum do
     DumbSPDYClient.body_chunk_count.should == 3
   end
   
-  class DummyReply < Momentum::Backend::Reply
-    def initialize(options)
-      @options = options
-    end
-    
-    def dispatch!
-      @on_headers.call(@options[:headers] || {})
-      @on_complete.call
-    end
-  end
-  
   it "passes request & response headers" do
     backend = Object.new
     backend.stub(:prepare) do |req|
       req.headers['accept-encoding'].should == 'gzip,deflate,sdch'
-      DummyReply.new(:headers => {'a' => 'b'})
+      DummyBackendResponse.new(:headers => {'a' => 'b'})
     end
     
     EM.run do

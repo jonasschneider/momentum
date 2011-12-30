@@ -7,7 +7,8 @@ module Momentum
         @momentum_request = momentum_request
       end
     end
-    class Reply
+
+    class Response
       AsyncResponse = [-1, {}, []].freeze
       
       def on_headers(&blk)
@@ -49,13 +50,12 @@ module Momentum
         status, headers, body = response
         headers['status'] = status.to_s
         headers['version'] = 'HTTP/1.1'
-        @on_headers.call cleanup_headers(headers) if @on_headers
+        @on_headers.call cleanup_response_headers(headers) if @on_headers
         
         body.each do |chunk|
           @on_body.call(chunk) if @on_body
         end
         
-        # If the body is being deferred, then terminate afterward.
         if body.respond_to?(:callback) && body.respond_to?(:errback)
           body.callback { terminate }
           body.errback { terminate }
@@ -69,13 +69,11 @@ module Momentum
         @on_complete.call if @on_complete
       end
       
-      def cleanup_headers(headers)
+      def cleanup_response_headers(headers)
         hdrs = headers.inject(Hash.new) do |hash,kv|
           hash[kv[0].downcase.gsub('_', '-')] = kv[1]
           hash
         end
-        #hdrs.http_reason = headers.http_reason
-        #hdrs.http_status = headers.http_status
         #if cookie = hdrs['Set-Cookie'] and cookie.respond_to?(:join)
         #  hdrs['Set-Cookie'] = cookie.join(', ')
         #end
@@ -93,7 +91,7 @@ module Momentum
     end
     
     def prepare(req)
-      Reply.new(@app, req)
+      Response.new(@app, req)
     end
   end
 end
