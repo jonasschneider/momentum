@@ -9,10 +9,8 @@ shared_examples "Momentum backend" do
   let(:given_response_body) { 'hello from my rack app' }
   let(:given_response_headers) { {"Content-Type" => "text/plain" } }
 
-  let(:request) { stub(
-    :headers => given_request_headers,
-    :uri => URI.parse('http://localhost/'),
-    :to_rack_env => rack_env
+  let(:request) { Momentum::Request.new(
+    :headers => given_request_headers
   ) }
   
   let(:reply) { backend.prepare(request) }
