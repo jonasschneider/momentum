@@ -19,10 +19,13 @@ current directory.
 
 You can also start Momentum from your code:
 
-    Momentum.start(my_rack_app)
+    require "momentum"
+    EM.run {
+      Momentum.start(Momentum::Adapters::Proxy.new('localhost', 3000))
+    }
 
-This will start Momentum using the `Local` backend (see below).
-
+This will start Momentum on `0.0.0.0:5555` as a proxy to an HTTP server that should be running on
+`localhost:3000`.
 
 Backend
 -------
