@@ -50,7 +50,7 @@ describe Accelerate::Windigo do
 
     len = socket.read(4).unpack('L').first
     body = socket.read(len)
-    { type: type, len: len, body: body }
+    { type: type, body: body }
   end
   
   context "response body" do
@@ -58,12 +58,9 @@ describe Accelerate::Windigo do
     
     it "gets returned" do
       send_request!
-      type = socket.read(1).to_i
-      type.should == Accelerate::Windigo::BODY_CHUNK
-
-      len = socket.read(4).unpack('L').first
-      body_data = socket.read(len)
-      body_data.should == 'ohai'
+      f = read_frame
+      f[:type].should == Accelerate::Windigo::BODY_CHUNK
+      f[:body].should  == 'ohai'
     end
   end
 

@@ -21,6 +21,9 @@ module Momentum::Adapters
         end
 
         client.close
+      rescue e
+        puts e.inspect
+        client.close
       end
 
     end
