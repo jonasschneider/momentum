@@ -23,8 +23,6 @@ module Momentum
         reply = @backend.prepare(req)
         
         reply.on_headers do |headers|
-          
-          
           logger.debug "response headers: #{headers.inspect}"
           send_syn_reply stream_id, headers
         end
@@ -76,7 +74,6 @@ module Momentum
   
     def receive_data(data)
       logger.debug ">> #{hex data}" if trace?
-      puts "done"
       @parser << data
     end
     
