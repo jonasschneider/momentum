@@ -5,6 +5,13 @@ module Momentum::Adapters
       BODY_CHUNK = 0x02
       SPDY_PUSH = 0x03
       
+      def send_frame(client, type, text)
+        client.write(type)
+        data = text.force_encoding('ASCII-8BIT')
+        client.write [data.length].pack('L')
+        client.write(data)
+      end
+
       def process_client(client)
         len = client.read(4).unpack('L').first
         data = client.read(len)
@@ -13,10 +20,7 @@ module Momentum::Adapters
         env = request.to_rack_env
         env['spdy'] = Momentum::AppDelegate.new @req do |type, payload|
           if type == :push
-            client.write(SPDY_PUSH)
-            data = payload.force_encoding('ASCII-8BIT')
-            client.write [data.length].pack('L')
-            client.write(data)
+            send_frame(client, SPDY_PUSH, payload)
           else
             raise "Unknown SPDY callback #{type}"
           end
@@ -25,16 +29,10 @@ module Momentum::Adapters
         status, headers, body = @app.call(request.to_rack_env)
         headers['status'] = status
         
-        client.write(HEADERS)
-        data = Marshal.dump(headers).force_encoding('ASCII-8BIT')
-        client.write [data.length].pack('L')
-        client.write(data)
+        send_frame(client, HEADERS, Marshal.dump(headers))
         
-        body.each do |chunk| 
-          client.write(BODY_CHUNK)
-          data = chunk.force_encoding('ASCII-8BIT')
-          client.write [data.length].pack('L')
-          client.write(data)
+        body.each do |chunk|
+          send_frame(client, BODY_CHUNK, chunk)
         end
         
         client.close
