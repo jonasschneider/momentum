@@ -17,7 +17,7 @@ module Momentum
     end
     
     def write(data)
-      @data << data
+      @data << data.force_encoding('ASCII-8BIT')
       send_data
     end
     
