@@ -3,7 +3,7 @@ require File.expand_path("../../support/helpers", __FILE__)
 require "momentum"
 
 describe Momentum::Stream do
-  let(:session) { mock('Session').tap{|s|s.should_receive(:logger).and_return(stub(:debug => true))} }
+  let(:session) { double('Session').tap{|s|s.stub(:logger).and_return(double(:debug => true))} }
 
   let(:stream) { Momentum::Stream.new 1, session }
 
