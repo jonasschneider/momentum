@@ -19,7 +19,7 @@ current directory.
 
 You can also start Momentum from your code:
 
-    Momentum.start(Momentum::Backend::Local.new(rack_app))
+    Momentum.start(my_rack_app)
 
 This will start Momentum using the `Local` backend (see below).
 
