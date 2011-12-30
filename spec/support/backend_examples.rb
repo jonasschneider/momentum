@@ -7,11 +7,11 @@ shared_examples "Momentum backend" do
     
     let(:rack_env) { { "a" => "b" } }
     
-    let(:headers) { { :url => '/' } }
+    let(:headers) { { 'method' => 'get', 'version' => 'HTTP/1.1', 'url' => '/', 'host' => 'localhost', 'scheme' => 'http' } }
 
     let(:request) { stub(
       :headers => headers,
-      :uri => URI.parse('/'),
+      :uri => URI.parse('http://localhost/'),
       :to_rack_env => rack_env
     ) }
     
