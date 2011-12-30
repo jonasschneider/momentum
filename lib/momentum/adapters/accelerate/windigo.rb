@@ -1,9 +1,10 @@
 module Momentum::Adapters
   class Accelerate
     class Windigo < Unicorn::HttpServer
-      SPDY_PUSH = 0x02
-      BODY_CHUNK = 0x01
-
+      HEADERS = 0x01
+      BODY_CHUNK = 0x02
+      SPDY_PUSH = 0x03
+      
       def process_client(client)
         len = client.read(4).unpack('L').first
         data = client.read(len)
@@ -23,6 +24,11 @@ module Momentum::Adapters
 
         status, headers, body = @app.call(request.to_rack_env)
         headers['status'] = status
+        
+        client.write(HEADERS)
+        data = Marshal.dump(headers).force_encoding('ASCII-8BIT')
+        client.write [data.length].pack('L')
+        client.write(data)
         
         body.each do |chunk| 
           client.write(BODY_CHUNK)
