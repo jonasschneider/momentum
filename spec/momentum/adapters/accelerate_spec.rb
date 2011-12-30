@@ -17,7 +17,10 @@ describe Momentum::Adapters::Accelerate do
     @pid = fork do
       server.start
     end
-    sleep 0.1
+    
+    while !is_socket_open?(@socket_name)
+      sleep 0.05
+    end
   end
   
   after :each do

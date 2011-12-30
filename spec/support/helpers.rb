@@ -10,6 +10,23 @@ require 'em-http'
 require 'socket'
 require 'timeout'
 
+def is_socket_open?(path)
+  begin
+    Timeout::timeout(1) do
+      begin
+        s = UNIXSocket.new(path)
+        s.close
+        return true
+      rescue Errno::ECONNREFUSED, Errno::ENOENT
+        return false
+      end
+    end
+  rescue Timeout::Error
+  end
+
+  return false
+end
+
 def is_port_open?(ip, port)
   begin
     Timeout::timeout(1) do

@@ -4,30 +4,18 @@ require "momentum"
 include Momentum::Adapters
 
 describe Accelerate::Windigo do
-  let(:socket) do
-    sock = nil
-    sleep 0.2
-    Timeout.timeout(4) do
-      begin
-        sock = UNIXSocket.new(@socket_name)
-      rescue Errno::ECONNREFUSED
-        sleep 0.2
-        retry
-      end
-    end
-    sock
-  end
-
-  let(:server) { Accelerate::Windigo.new(app, listeners: @socket_name) }
-  
   before :each do
     t = Tempfile.new('momentum-spec')
     @socket_name = t.path
     t.unlink
-    
+
     @pid = fork do
       server.start
       exit
+    end
+  
+    while !is_socket_open?(@socket_name)
+      sleep 0.05
     end
   end
   
@@ -35,6 +23,11 @@ describe Accelerate::Windigo do
     Process.kill(:TERM, @pid)
   end
   
+  let(:socket) { UNIXSocket.new(@socket_name) }
+
+  let(:server) { Accelerate::Windigo.new(app, listeners: @socket_name) }
+
+
   let(:headers) { { 'method' => 'get', 'version' => 'HTTP/1.1', 'url' => '/', 'host' => 'localhost', 'scheme' => 'http' } }
   
   let(:request) { Momentum::Request.new(headers: headers) }
