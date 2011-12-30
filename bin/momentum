@@ -3,7 +3,7 @@ require "momentum"
 require "rack"
 
 EM.run {
-  Momentum.start(Momentum::Backend.new(Rack::Server.new.app))
+  Momentum.start(Rack::Server.new.app)
   puts ">> Momentum running on 0.0.0.0:5555"
   trap(:INT) {
     puts ">> Exiting."
