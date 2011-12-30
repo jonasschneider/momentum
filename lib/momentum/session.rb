@@ -1,5 +1,6 @@
 module Momentum
   class Session < ::EventMachine::Connection
+    HTTP_RESPONSE = "HTTP/1.0 505 HTTP Version not supported\r\nConnection: close\r\n\r\n<h1>505 HTTP Version not supported</h1>This is a SPDY server."
     attr_accessor :backend
     
     def initialize(*args)
@@ -55,6 +56,7 @@ module Momentum
       end
 
       @streams = []
+      @could_be_http = true
     end
   
     def post_init
@@ -72,7 +74,23 @@ module Momentum
   
     def receive_data(data)
       logger.debug ">> #{hex data}" if trace?
-      @parser << data
+      if @could_be_http
+        if is_http?(data)
+          send_data HTTP_RESPONSE
+          close_connection_after_writing
+        else
+          @could_be_http = false 
+        end
+      else
+        @parser << data
+      end
+    end
+    
+    def is_http?(data)
+      methods = %w(GET POST PUT DELETE HEAD TRACE OPTIONS CONNECT)
+      methods.any? do |method|
+        data[0,method.length].upcase == method
+      end
     end
     
     def send_syn_reply(stream, headers)
