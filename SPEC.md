@@ -10,7 +10,7 @@ Backends
   HTTP Compliance is then achieved by having a slave HTTP server that forwards requests to
   the SPDY server.
 
-TODO: Proper proxy headers for the Proxy backend
+-> Implement the Backends as Rack apps using :async?
 
 Taking advantage of SPDY Server Push
 -------------------------------------

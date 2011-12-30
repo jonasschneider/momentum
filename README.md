@@ -34,6 +34,13 @@ Requests to the app will be handled in the event loop of the SPDY server.
 This can probably cause timeouts and other problems if your Rack app's response time
 is high.
 
+This backend provides functionality for deferred/asynchronous responses.
+This works just like in a `Thin` environment: throwing `:async` will cause the
+header reply to be postponed. Calling the proc stored in `env['async.callback']`
+will send the headers. If you provide a body with callback functionality, you can
+even use deferred bodies. [See here for an example from Thin.](thin_async)
+
+
 *This backend is to be used for testing only, as it provides no HTTP fallback.*
 
 ### Momentum::Backend::Proxy
@@ -70,3 +77,5 @@ Credits
 -------
 Thanks to Ilya Grigorik for the great [SPDY parser gem](https://github.com/igrigorik/spdy).
 Inspired by Roman Shterenzon's [SPDY server](https://github.com/romanbsd/spdy).
+
+[thin_async]: https://github.com/macournoyer/thin/blob/master/example/async_app.ru
