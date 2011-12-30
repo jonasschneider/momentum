@@ -7,8 +7,7 @@ require "rack"
 describe Momentum::Adapters::Accelerate do
   let(:app) { lambda { |env| [given_response_status, given_response_headers, [given_response_body]] } }
 
-  let(:server) { puts "server listening on #{@socket_name}"
-    Momentum::Adapters::Accelerate::Windigo.new(app, listeners: @socket_name) }
+  let(:server) { Momentum::Adapters::Accelerate::Windigo.new(app, listeners: @socket_name) }
 
   before :each do
     t = Tempfile.new('momentum-spec')
@@ -26,7 +25,6 @@ describe Momentum::Adapters::Accelerate do
   end
 
   let(:backend) do
-    puts "backend looking at #{@socket_name}"
     app = Momentum::Adapters::Accelerate.new(@socket_name)
     Momentum::Backend.new(app)
   end

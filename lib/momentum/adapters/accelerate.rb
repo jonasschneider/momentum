@@ -43,10 +43,8 @@ module Momentum
           conn.on_data do |data|
             buf << data
             next if buf.length < 5
-            puts "header arrived"
             type = buf[0].to_i
             len = buf[1,4].unpack('L').first
-            puts "len=#{len}"
             
             next if buf.length < (5 + len)
             body = buf[5,len]
@@ -54,10 +52,8 @@ module Momentum
             case type
             when Windigo::HEADERS
               headers = Marshal.load(body)
-              puts "got headers #{headers.inspect}"
               env['async.callback'].call [headers['status'], headers, deferred_body]
             when Windigo::BODY_CHUNK
-              puts "got body #{body.inspect}"
               deferred_body.call [body]
             else
               raise "Wat?"
