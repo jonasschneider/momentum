@@ -10,12 +10,21 @@ module Momentum::Adapters
         data = text.force_encoding('ASCII-8BIT')
         client.write [data.length].pack('L')
         client.write(data)
+        
+        puts "wrote frame len=#{data.length}"
       end
 
       def process_client(client)
-        len = client.read(4).unpack('L').first
+        puts "connection opened"
+        d = client.read(4)
+        raise "client closed connection" unless d
+        len = d.unpack('L').first
+        puts "read len=#{len}"
+        
         data = client.read(len)
+        puts "read data"
         request = Marshal.load(data)
+        puts "got req #{request.inspect}"
         
         env = request.to_rack_env
         env['spdy'] = Momentum::AppDelegate.new @req do |type, payload|
@@ -26,13 +35,14 @@ module Momentum::Adapters
           end
         end
 
-        status, headers, body = @app.call(request.to_rack_env)
+        status, headers, body = @app.call(env)
         headers['status'] = status
         
         send_frame(client, HEADERS, Marshal.dump(headers))
         
         body.each do |chunk|
           send_frame(client, BODY_CHUNK, chunk)
+          
         end
         
         client.close
