@@ -1,4 +1,4 @@
 require "momentum"
 EM.run {
-  Momentum.start_proxy('localhost', 3000)
+  Momentum.start(Momentum::Backend::Proxy.new('localhost', 3000))
 }
