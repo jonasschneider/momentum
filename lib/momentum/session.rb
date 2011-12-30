@@ -52,6 +52,7 @@ module Momentum
       }
       
       @parser.on_ping do |id|
+        logger.debug "> Ping #{id}"
         pong = SPDY::Protocol::Control::Ping.new
         pong.ping_id = id
         send_data pong.to_binary_s
