@@ -1,35 +1,34 @@
-Backends
+Accelerate adapter
 --------
 - `Accelerate` will fork a custom-protocol server that listens on a Unix socket.
-  Think unicorn, but without the HTTP parsing. The SPDY server will then fire requests
-  at that socket by opening connections. This way, the SPDY `EventMachine` reactor can
-  still function while processing Rack apps with quite long response times.
-  The protocol is custom because besides from regular HTTP responses, special SPDY-related
-  messages may be sent to the SPDY server, such as starting a resource push.
+  Think unicorn, but without the HTTP overhead. The SPDY server will fire requests
+  at that socket. This way, the SPDY `EventMachine` reactor can still function while 
+  heavy Rack apps are processed in the Unicorn-style worker process.
+  The protocol is binary with little overhead. It is custom because besides from
+  regular HTTP responses, special SPDY-related messages may be sent to the SPDY server,
+  such as the request for a SPDY server push.
   
   HTTP Compliance is then achieved by having a slave HTTP server that forwards requests to
-  the SPDY server.
+  the front-end SPDY server.
 
--> Implement the Backends as Rack apps using :async?
 
 Taking advantage of SPDY Server Push
 -------------------------------------
+A `Momentum::AppDelegate` object is available in `env['spdy']` when running on Momentum.
+The public API for this object currently consists of just one method, `push`.
+It should be called when the app can safely determine that the resource
+at `path` is going to be required to render the page.
 
-Using SPDY Server push requires the `Accelerate` backend.
-The momentum server stores a `Momentum::AppInterface` object in `env['spdy']`.
-`Momentum::AppInterface` provides several methods:
+Using it requires the `Accelerate` backend. If you are not running the `Accelerate` adapter,
+calling `push` will result in a no-op. If you _are_ running that adapter, calling `push(url)`
+will initiate a SPDY Server Push to the client.
 
-- `hint(url)` (SPDY Server Hint is deprecated?)
+The SPDY server will be informed of the app's push request, and will start processing the 
+request immediately as if was sent as a separate request by the client.
 
-- `push(url)` initiates a SPDY push to the client.
-  It should be called when the app can safely determine that the resource
-  at `path` is going to be required to render the page.
-  
-  The SPDY server will then start processing the request immediately as if was sent as
-  a separate request by the client.
-  The virtual request will look to the application like a normal GET request from the same 
-  client. Information that is duplicated from the initial request consists of:
+The virtual request will look to the application like a normal GET request from the same 
+client. Information that is duplicated from the initial request consists of:
     - Cookie
     - User-Agent
-  
-  Processing of the resource will occur in parallel to the processing of the original request.
+
+-> Caching / Server Hint?
