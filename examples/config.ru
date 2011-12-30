@@ -3,7 +3,7 @@ run lambda{ |env|
     body = ["<script src='asdf.js'></script>"]
     tp = 'text/html'
   else
-    body = [File.read("application.js")]
+    body = ["a='#{'x'*100_000}'"]
     tp = 'text/javascript'
   end
   
