@@ -46,28 +46,27 @@ use an Adapter to connect the SPDY server to another backend.
 Adapters
 --------
 Adapters are Rack apps. They can be thought of as middleware. If you do not want your App
-to be executed within the SPDY server event loop (because it blocks), you should use an
+to be executed within the SPDY server event loop (i.e. because it blocks), you should use an
 Adapter.
 
 ### Momentum::Adapters::Proxy
-The `Proxy` adapter will cause all requests on the SPDY connectio to be forwarded to a 
+The `Proxy` adapter will cause all requests on the SPDY connection to be forwarded to a 
 given HTTP server. The SPDY server will act as an HTTP proxy. This way, the speedup provided 
-by SPDY's long-lived connections can improve loading times for SPDY-compatible clients.
-However, no advanced SPDY features like Server Push can be used, as they would require 
-communication betweeen the backend and the SPDY server before the response is sent.
+by SPDY's long-lived connections can improve loading times for compatible clients.
+However, no advanced features of the SPDY protocol, such as Server Push, can be used, as
+they would requirecommunication betweeen the backend and the SPDY server before the response 
+is sent.
 
 Note that is is _not_ a SPDY/HTTPS proxy for proxying connections to arbitrary servers
 through a SPDY tunnel as described in http://dev.chromium.org/spdy/spdy-proxy-examples.
-
-If you use your public HTTP server as the proxy target, the `Proxy` backend allows the 
-app to be accessible through both HTTP and SPDY.
 
 
 Deployment
 ----------
 It is recommended to use the `Proxy` adapter for deploying, so you do not have to administer
 two completely different frontends to your Rack app. The SPDY server falls back on the plain 
-old HTTP server for processing, so no backend changes are required.
+old HTTP server for processing, so no backend changes are required; SPDY-compatible clients
+will use the improved connection, and HTTP clients will fall back.
 
 In the future, it will be possible to reverse this architecture, having a secondary HTTP server
 forward requests from "legacy" clients to the master SPDY server.
