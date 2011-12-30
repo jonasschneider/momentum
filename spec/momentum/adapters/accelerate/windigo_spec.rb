@@ -1,8 +1,9 @@
 require File.expand_path("../../../../support/helpers", __FILE__)
 
 require "momentum"
+include Momentum::Adapters
 
-describe Momentum::Adapters::Accelerate::Windigo do
+describe Accelerate::Windigo do
   let(:socket_file) { '/tmp/unicorn.sock' }
   let(:socket) do
     sock = nil
@@ -14,11 +15,10 @@ describe Momentum::Adapters::Accelerate::Windigo do
         retry
       end
     end
-    puts "sock up"
     sock
   end
 
-  let(:server) { Momentum::Adapters::Accelerate::Windigo.new(app, listeners: socket_file) }
+  let(:server) { Accelerate::Windigo.new(app, listeners: socket_file) }
   
   before do
     @pid = fork do
@@ -46,9 +46,12 @@ describe Momentum::Adapters::Accelerate::Windigo do
     
     it "gets returned" do
       send_request!
-      while line = socket.gets and !line.strip.empty?
-        puts "response: "+line
-      end
+      type = socket.read(1).to_i
+      type.should == Accelerate::Windigo::BODY_CHUNK
+
+      len = socket.read(4).unpack('L').first
+      body_data = socket.read(len)
+      body_data.should == 'ohai'
     end
   end
 end
