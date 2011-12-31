@@ -14,7 +14,7 @@ module Momentum
       @parser = ::SPDY::Parser.new
       @parser.on_headers_complete do |stream_id, associated_stream, priority, headers|
         req = Request.new(stream_id: stream_id, associated_stream: associated_stream, priority: priority, headers: headers)
-        logger.info "got a request to #{req.uri} => #{headers.inspect}"
+        logger.info "[#{stream_id}] got a request to #{req.uri}"
         request_received_at = Time.now
         
         send_buffer = ''
@@ -23,30 +23,21 @@ module Momentum
         reply = @backend.prepare(req)
         
         reply.on_headers do |headers|
-          logger.debug "response headers: #{headers.inspect}"
           send_syn_reply stream_id, headers
+          logger.debug "[#{stream_id}] SYN_REPLY sent after #{(Time.now - request_received_at).to_f}s"
         end
         stream = Stream.new stream_id, self
         
         reply.on_body do |chunk|
-          # Spdy.logger.debug "Stream #{@stream_id} send_data (data=#{@data.size})"
-          #send_buffer << chunk
           stream.write chunk
-          
         end
         
         reply.on_complete do
-          time_taken = (Time.now - request_received_at)
-          logger.debug "[#{stream_id}] Request completed, took #{time_taken.to_f} secs"
+          logger.debug "[#{stream_id}] Request completed, took #{ (Time.now - request_received_at).to_f}s start-to-finish"
           stream.eof!
         end
-        dispatch_start_time = Time.now
+        
         reply.dispatch!
-        dispatch_time = (Time.now - dispatch_start_time)
-        logger.debug "[#{stream_id}] Dispatch completed, took #{dispatch_time.to_f} secs"
-        if dispatch_time > 0.01
-          raise "Dispatching took more than msec. Something wrong?"
-        end
       end
       
       @parser.on_body             { |stream_id, data| 
