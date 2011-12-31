@@ -54,6 +54,7 @@ module Momentum
               headers = Marshal.load(body)
               env['async.callback'].call [headers['status'], headers, deferred_body]
             when Windigo::BODY_CHUNK
+              puts "==> received #{body.length} bytes of body from backend"
               deferred_body.call [body]
             else
               raise "Wat?"
@@ -61,8 +62,9 @@ module Momentum
           end
           
           conn.on_close do 
-            puts "closed."
-            deferred_body.succeed
+            EM.next_tick do
+              deferred_body.succeed
+            end
           end
           
           data = Marshal.dump(req).force_encoding('ASCII-8BIT')
