@@ -1,15 +1,15 @@
 Momentum, a SPDY Server for Rack apps
 =====================================
 
+Momentum is a Rack handler for SPDY clients. That means, it receives connections
+from SPDY clients and runs Rack apps. It's that simple.
 
-Momentum is a Rack-compatible web server for SPDY clients. Momentum can act as a reverse proxy, 
-forwarding requests from SPDY-enabled browsers to your regular HTTP app server.
-But since it is completely compatible with the Rack specification, you can also run any Rack app
-purely on SPDY.
+Additional features are provided by adapters that enable Momentum to act as a proxy to your plain
+old HTTP server, or run heavy Rack apps (Rails, I'm looking at you!) in separate threads or processes.
+
 
 Usage
 -----
-
 Suppose you have added `momentum` to your app's `Gemfile`, you can start the SPDY server by running:
 
     bundle exec momentum
