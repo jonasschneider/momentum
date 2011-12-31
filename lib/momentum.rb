@@ -11,8 +11,9 @@ require "momentum/session"
 
 require "momentum/app_delegate"
 require "momentum/backend"
-require "momentum/adapters/proxy"
 
+require "momentum/adapters/proxy"
+require "momentum/adapters/defer"
 require 'socket'
 require 'unicorn'
 require "momentum/adapters/accelerate"
