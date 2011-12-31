@@ -41,9 +41,7 @@ module Momentum
           deferred_body = Body.new
           buf = ''
           conn.on_data do |data|
-            puts "==> connection received #{data.size} of RAW data"
             buf << data
-            puts "(buffer is now #{buf.length} long)"
             loop do
               break if buf.length < 5
               type = buf[0].to_i
@@ -52,13 +50,11 @@ module Momentum
               break if buf.length < (5 + len)
               body = buf[5,len]
               buf.slice!(0,(5+len))
-              puts "processing a packet. type = #{type}"
               case type
               when Windigo::HEADERS
                 headers = Marshal.load(body)
                 env['async.callback'].call [headers['status'], headers, deferred_body]
               when Windigo::BODY_CHUNK
-                puts "==> received #{body.length} bytes of body from backend"
                 deferred_body.call [body]
               else
                 raise "Wat?"
@@ -68,7 +64,6 @@ module Momentum
           
           conn.on_close do 
             EM.next_tick do
-              puts "====> CONNECTION CLOSED."
               deferred_body.succeed
             end
           end
