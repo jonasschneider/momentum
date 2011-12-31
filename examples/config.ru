@@ -1,6 +1,6 @@
 run lambda{ |env| 
-  if env["PATH_INFO"] != '/asdf.js'
-    body = ["<script src='asdf.js'></script>"]
+  if env["PATH_INFO"] == '/'
+    body = ["<script src='1.js'></script><script src='2.js'></script><script src='3.js'></script>"]
     tp = 'text/html'
   else
     body = ["a='#{'x'*100_000}'"]
@@ -9,3 +9,5 @@ run lambda{ |env|
   
   [200, {"Content-Type" => tp}, body]
 }
+
+#A: 80ms, D: 20ms, T: 3ms
