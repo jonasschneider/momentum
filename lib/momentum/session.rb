@@ -15,6 +15,7 @@ module Momentum
       @parser.on_headers_complete do |stream_id, associated_stream, priority, headers|
         req = Request.new(stream_id: stream_id, associated_stream: associated_stream, priority: priority, headers: headers)
         logger.info "got a request to #{req.uri} => #{headers.inspect}"
+        request_received_at = Time.now
         
         send_buffer = ''
         
@@ -35,10 +36,17 @@ module Momentum
         end
         
         reply.on_complete do
+          time_taken = (Time.now - request_received_at)
+          logger.debug "[#{stream_id}] Request completed, took #{time_taken.to_f} secs"
           stream.eof!
         end
-        
+        dispatch_start_time = Time.now
         reply.dispatch!
+        dispatch_time = (Time.now - dispatch_start_time)
+        logger.debug "[#{stream_id}] Dispatch completed, took #{dispatch_time.to_f} secs"
+        if dispatch_time > 0.01
+          raise "Dispatching took more than msec. Something wrong?"
+        end
       end
       
       @parser.on_body             { |stream_id, data| 
