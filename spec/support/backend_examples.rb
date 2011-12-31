@@ -38,7 +38,7 @@ shared_examples "Momentum backend" do
         dispatch_start_time = Time.now
         reply.dispatch!
         dispatch_duration = Time.now - dispatch_start_time
-        dispatch_duration.should < 0.01
+        dispatch_duration.should < 0.02
       end
     }
     
