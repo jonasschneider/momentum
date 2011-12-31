@@ -109,67 +109,68 @@ client. Information that is duplicated from the initial request consists of:
 
 Performance
 -----------
-This project is in development. The performance is, to be honest, horrible.
 I performe somed totally unscientific tests over a local network accessing the example app in
 `examples/config.ru` from a media center-style box running Debian. Times were measured 
 using the Chrome DOM inspector. The app in question displays a bare-bones HTML page, which 
-in turn loads 3 javascripts from the server, which each have a size of 100KB.
+in turn loads 3 javascripts from the server, each with a size of 100KB.
 
-### Initial request, load time of main page (~100B)
-<dl>
-  <dt>`ruby example/deferred_server.rb`</dt>
-  <dd>27ms</dd>
+This project is in development. The results are, to be honest, horrible.
+This is unacceptable given the fact that one of the main goals of SPDY is to improve loading
+times, and so performance is a main goal for the Momentum project.
+It has to be said that Thin is a very fast competitor that is, however, unable
+to handle slow clients gracefully. Also, the results could have been very different had the
+test been performed over the internet. Over a local connection, the advantage of the single
+connection is negated by the protocol overhead, making the multi-connection approach faster.
+
+<table>
+  <thead>
+    <tr>
+      <th>&nbsp;</th>
+      <th>examples/deferred_server.rb</th>
+      <th>thin</th>
+    </tr>
+  </thead>
   
-  <dt>`thin start`</dt>
-  <dd>5ms</dd>
-</dl>
+  <tbody>
+    <tr>
+      <td colspan=3><b>Page components</b></td>
+    </tr>
+    <tr>
+      <td>Initial request, load time of main page</td>
+      <td>27ms</td>
+      <td>8ms</td>
+    </tr>
+    <tr>
+      <td>Subsequent request, load time of main page</td>
+      <td>15ms</td>
+      <td>8ms</td>
+    </tr>
+    <tr>
+      <td>Average load time of the javascripts (100KB)</td>
+      <td>124ms</td>
+      <td>20ms</td>
+    </tr>
+    <tr>
+      <td>Subsequent request, *time until javascript is requested*</td>
+      <td>210ms</td>
+      <td>180ms</td>
+    </tr>
 
-### Subsequent request, load time of main page (~100B)
-<dl>
-  <dt>`ruby example/deferred_server.rb`</dt>
-  <dd>15ms</dd>
-  
-  <dt>`thin start`</dt>
-  <dd>asdf</dd>
-</dl>
-
-### Average load time of the javascripts (100KB)
-<dl>
-  <dt>`ruby deferred_server.rb`</dt>
-  <dd>124ms</dd>
-  
-  <dt>`thin start`</dt>
-  <dd>20ms</dd>
-</dl>
-
-### Side test: Subsequent request, time until javascript is _requested_
-This will become important when SPDY Push is used.
-<dl>
-  <dt>`ruby example/deferred_server.rb`</dt>
-  <dd>210ms</dd>
-  
-  <dt>`thin start`</dt>
-  <dd>180ms</dd>
-</dl>
-
-### Side test: Initial request, time until DOMContentLoaded
-<dl>
-  <dt>`ruby example/deferred_server.rb`</dt>
-  <dd>450ms</dd>
-  
-  <dt>`thin start`</dt>
-  <dd>380ms</dd>
-</dl>
-
-Deployment
-----------
-It is recommended to use the `Proxy` adapter for deploying, so you do not have to administer
-two completely different frontends to your Rack app. The SPDY server falls back on the plain 
-old HTTP server for processing, so no backend changes are required; SPDY-compatible clients
-will use the improved connection, and HTTP clients will fall back.
-
-In the future, it will be possible to reverse this architecture, having a secondary HTTP server
-forward requests from "legacy" clients to the master SPDY server.
+    <tr>
+      <td colspan=3><b>Totals</b></td>
+    </tr>
+    <tr>
+      <td>Initial request, time until DOMContentLoaded</td>
+      <td>450ms</td>
+      <td>380ms</td>
+    </tr>
+    <tr>
+      <td>Subsequent request, time until DOMContentLoaded</td>
+      <td>400ms</td>
+      <td>380ms</td>
+    </tr>
+  </tbody>
+</table>
 
 
 Compliance
