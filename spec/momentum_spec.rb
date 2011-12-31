@@ -1,7 +1,7 @@
 require File.expand_path("../support/helpers", __FILE__)
-require File.expand_path("../support/dummy_backend_response", __FILE__)
 
 require "momentum"
+require File.expand_path("../support/dummy_backend_response", __FILE__)
 require "rack"
 
 class DumbSPDYClient < EventMachine::Connection
