@@ -132,8 +132,8 @@ overhead, making the multi-connection approach faster.
   <thead>
     <tr>
       <th>&nbsp;</th>
-      <th>_Accelerate_</th>
-      <th>_Deferred_</th>
+      <th>Adapters::Accelerate</th>
+      <th>Adapters::Deferred</th>
       <th>Thin</th>
     </tr>
   </thead>
@@ -161,7 +161,7 @@ overhead, making the multi-connection approach faster.
       <td>20ms</td>
     </tr>
     <tr>
-      <td>Subsequent request, *time until javascript is requested*</td>
+      <td>Subsequent request, time until javascript is requested</td>
       <td>250ms</td>
       <td>210ms</td>
       <td>180ms</td>
