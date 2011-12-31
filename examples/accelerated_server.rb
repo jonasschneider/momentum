@@ -19,7 +19,7 @@ end
 
 SOCKET = '/tmp/momentum-test'
 fork do
-  Momentum::Adapters::Accelerate::Windigo.new(app, listeners: SOCKET).start.join
+  Momentum::Adapters::Accelerate::Windigo.new(app, listeners: SOCKET, worker_processes: 4).start.join
 end
 
 EM.run {
