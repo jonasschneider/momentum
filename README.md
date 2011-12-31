@@ -112,22 +112,29 @@ Performance
 I performe somed totally unscientific tests over a local network accessing the example app in
 `examples/config.ru` from a media center-style box running Debian. Times were measured 
 using the Chrome DOM inspector. The app in question displays a bare-bones HTML page, which 
-in turn loads 3 javascripts from the server, each with a size of 100KB.
+in turn loads 3 javascripts from the server, each with a size of 100KB. To test SPDY, Chrome
+was started with the `--use-spdy=no-ssl` flag, which forces all connections to be SPDY.
+This means that SPDY negotiation is not included in the benchmark.
+Traditional benchmark approaches using tools like `ab` fail for two reasons. First, because
+there is no equivalent for SPDY, and second, because SPDY is not optimized for raw request
+benchmarking, but instead focuses on the results given by real browsers
 
 This project is in development. The results are, to be honest, horrible.
 This is unacceptable given the fact that one of the main goals of SPDY is to improve loading
 times, and so performance is a main goal for the Momentum project.
-It has to be said that Thin is a very fast competitor that is, however, unable
-to handle slow clients gracefully. Also, the results could have been very different had the
-test been performed over the internet. Over a local connection, the advantage of the single
-connection is negated by the protocol overhead, making the multi-connection approach faster.
+To defend the Momentum results a bit: Thin is a very fast competitor, but is unable to handle 
+slow clients gracefully without a reverse proxy in front of it.
+Also, the results could have been very different had the test been performed over the internet.
+Over a local connection, the advantage of the single connection is negated by the protocol 
+overhead, making the multi-connection approach faster.
 
 <table>
   <thead>
     <tr>
       <th>&nbsp;</th>
-      <th>examples/deferred_server.rb</th>
-      <th>thin</th>
+      <th>_Accelerate_</th>
+      <th>_Deferred_</th>
+      <th>Thin</th>
     </tr>
   </thead>
   
@@ -137,21 +144,25 @@ connection is negated by the protocol overhead, making the multi-connection appr
     </tr>
     <tr>
       <td>Initial request, load time of main page</td>
+      <td>35ms</td>
       <td>27ms</td>
       <td>8ms</td>
     </tr>
     <tr>
       <td>Subsequent request, load time of main page</td>
+      <td>19msms</td>
       <td>15ms</td>
       <td>8ms</td>
     </tr>
     <tr>
       <td>Average load time of the javascripts (100KB)</td>
+      <td>150ms</td>
       <td>124ms</td>
       <td>20ms</td>
     </tr>
     <tr>
       <td>Subsequent request, *time until javascript is requested*</td>
+      <td>250ms</td>
       <td>210ms</td>
       <td>180ms</td>
     </tr>
@@ -161,11 +172,13 @@ connection is negated by the protocol overhead, making the multi-connection appr
     </tr>
     <tr>
       <td>Initial request, time until DOMContentLoaded</td>
+      <td>510ms</td>
       <td>450ms</td>
       <td>380ms</td>
     </tr>
     <tr>
       <td>Subsequent request, time until DOMContentLoaded</td>
+      <td>460ms</td>
       <td>400ms</td>
       <td>380ms</td>
     </tr>
