@@ -13,7 +13,7 @@ module Momentum
       @stream_id = 1
       @parser = ::SPDY::Parser.new
       @parser.on_headers_complete do |stream_id, associated_stream, priority, headers|
-        req = Request.new(stream_id: stream_id, associated_stream: associated_stream, priority: priority, headers: headers, zlib: @zlib)
+        req = Request.new(stream_id: stream_id, associated_stream: associated_stream, priority: priority, headers: headers)
         logger.info "got a request to #{req.uri} => #{headers.inspect}"
         
         send_buffer = ''
