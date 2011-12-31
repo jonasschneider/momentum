@@ -110,10 +110,10 @@ client. Information that is duplicated from the initial request consists of:
 Performance
 -----------
 This project is in development. The performance is, to be honest, horrible.
-I performe somed totally unscientific tests over a local network accessing the example app in `examples/config.ru`
-from a media center-style box running Debian.
-The app in question displays a bare-bones HTML page, which in turn loads 3 javascripts
-from the server, which each have a size of 100KB.
+I performe somed totally unscientific tests over a local network accessing the example app in
+`examples/config.ru` from a media center-style box running Debian. Times were measured 
+using the Chrome DOM inspector. The app in question displays a bare-bones HTML page, which 
+in turn loads 3 javascripts from the server, which each have a size of 100KB.
 
 ### Initial request, load time of main page (~100B)
 <dl>
