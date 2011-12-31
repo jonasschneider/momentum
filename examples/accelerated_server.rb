@@ -1,5 +1,7 @@
 require "momentum"
 
+
+
 app = lambda{ |env| 
   if env["PATH_INFO"] != '/asdf.js'
     body = ["<script src='asdf.js'></script>"]
@@ -11,6 +13,9 @@ app = lambda{ |env|
   
   [200, {"Content-Type" => tp}, body]
 }
+if File.exist? 'config.ru'
+  app = Rack::Server.new.app
+end
 
 SOCKET = '/tmp/momentum-test'
 fork do
