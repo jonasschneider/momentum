@@ -17,13 +17,13 @@ Suppose you have added `momentum` to your app's `Gemfile`, you can start the SPD
 The `momentum` command behaves just like `rackup`, it will try to run a `config.ru` file in the 
 current directory.
 This will start Momentum on `0.0.0.0:5555` with the `Defer` adapter (see below).
-If you use a recent version of Chrome/Chromium, you can start it with `--use-spdy=no-ssl` to force
+If you have a recent version of Chrome/Chromium, you can start it with `--use-spdy=no-ssl` to force
 it to use SPDY. Point it at your server, and bam! You're running SPDY.
 
 You can also start Momentum from your code:
 
     require "momentum"
-    app = lambda { |env| [200, {"Content-Type" => "text/plain"}, "Hi via SPDY!"] }
+    app = lambda { |env| [200, {"Content-Type" => "text/plain"}, ["Hi via SPDY!"]] }
     EM.run {
       Momentum.start(Momentum::Adapters::Defer.new(app))
     }
@@ -34,6 +34,7 @@ For more usage examples, see the `examples/` directory.
 Backend
 -------
 As Momentum is Rack-based, the server will deliver all requests to a Rack app.
+This Rack app is the argument to `Momentum.start`.
 The simplest possible solution is to just use your regular Rack app with the Momentum backend.
 SPDY requests to your app will cause your application code to be executed in the SPDY server 
 itself.
@@ -43,23 +44,23 @@ This works just like in a Thin environment: throwing `:async` will cause the
 header reply to be postponed. Calling the proc stored in `env['async.callback']`
 will send the headers. If you provide a body with callback functionality, you can
 even use streaming bodies. [See here for an example from Thin.][thin_async]
-Be careful: when running your app on Momentum, you are probably using an adapter.
+Be careful though: when running your app on Momentum, you are probably using an adapter.
 While the backend provides `:async` capabilities to the app, not all adapters do.
 
 As your app is most likely not asynchronous, the event loop of the SPDY server will be 
 blocked when running your app's code. This can cause timeouts and other problems, and will
 effectively make your SPDY sever synchronous.
-In order to stay asynchronous, you should use an Adapter to offload the app execution to somewhere
+In order to stay non-blocking, you should use an adapter to offload the app execution to somewhere
 else. If you're curious, you can try out what happens without an adapter by running 
 `momentum --plain` in your app's directory.
 
 
 Adapters
 --------
-Adapters are Rack apps. They can be thought of as middleware. If you do not want your App
+Adapters are Rack apps. They can be thought of as middleware. If you do not want your app
 to be executed within the SPDY server event loop (i.e. because it blocks), you should use an
-Adapter. The purpose of adapters is to return an `:async` response very fast, so the event loop
-of the SPDY server is not blocked. Of course, the adapter has to get the response from somewhere.
+adapter. The design of adapters is to return an `:async` response immediately, so the event loop
+of the SPDY server is not blocked. Of course, the adapter has to get the real response from somewhere.
 The various adapters use mechanisms that are provided by EventMachine to generate or fetch the
 response asynchronously.
 
@@ -81,7 +82,7 @@ way of providing the SPDY protocol to clients without any backend configuration 
 
 ### Momentum::Adapters::Defer
 `Defer` will use the EventMachine thread pool to run your application code. No subprocesses have to be
-spawned. Its architecture is very simple, as it does not require any form inter-process communication.
+spawned. Its architecture is very simple, as it does not require any form of inter-process communication.
 This reduces overhead in comparison to the `Accelerate` adapter, but also requires your code to be threadsafe.
 As it provides the best performance, this adapter is the currently recommended one, and is used by default
 when running `momentum`.
@@ -133,9 +134,11 @@ using the Chrome DOM inspector. The app in question displays a bare-bones HTML p
 in turn loads 3 javascripts from the server, each with a size of 100KB. To test SPDY, Chrome
 was started with the `--use-spdy=no-ssl` flag, which forces all connections to be SPDY.
 This means that SPDY negotiation is not included in the benchmark.
-Traditional benchmark approaches using tools like `ab` fail for two reasons. First, because
-there is no equivalent for SPDY, and second, because SPDY is not optimized for raw request
-benchmarking, but instead focuses on the results given by real browsers
+For comparison, a Thin server was started running the same app, accessed by Chrome without
+command line arguments.
+Traditional benchmark approaches using tools like `ab` are inappropriate because SPDY is not optimized
+for raw request benchmarking, but instead focuses on the results given by real browsers.
+Besides that, there is no `ab` equivalent for SPDY. High-concurrency benchmarks are still to be done.
 
 This project is in development. The results are, to be honest, horrible.
 This is unacceptable given the fact that one of the main goals of SPDY is to improve loading
@@ -158,7 +161,7 @@ overhead, making the multi-connection approach faster.
   
   <tbody>
     <tr>
-      <td colspan=3><b>Page components</b></td>
+      <td colspan=4><b>Page components</b></td>
     </tr>
     <tr>
       <td>Initial request, load time of main page</td>
@@ -186,7 +189,7 @@ overhead, making the multi-connection approach faster.
     </tr>
 
     <tr>
-      <td colspan=3><b>Totals</b></td>
+      <td colspan=4><b>Totals</b></td>
     </tr>
     <tr>
       <td>Initial request, time until DOMContentLoaded</td>
