@@ -3,7 +3,13 @@ require "momentum"
 require "rack"
 
 EM.run {
-  Momentum.start(Rack::Server.new.app)
+  wrap = ARGV.shift != '--plain'
+  app = Rack::Server.new.app
+  if wrap
+    app = Momentum::Adapters::Defer.new(app)
+  end
+  
+  Momentum.start(app)
   puts ">> Momentum running on 0.0.0.0:5555"
   trap(:INT) {
     puts ">> Exiting."

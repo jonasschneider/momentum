@@ -13,90 +13,108 @@ Usage
 Suppose you have added `momentum` to your app's `Gemfile`, you can start the SPDY server by running:
 
     bundle exec momentum
-  
-The `momentum` command behaves the same as `rackup`, it will try to run a `config.ru` file in the 
+
+The `momentum` command behaves just like `rackup`, it will try to run a `config.ru` file in the 
 current directory.
+This will start Momentum on `0.0.0.0:5555` with the `Defer` adapter (see below).
+If you use a recent version of Chrome/Chromium, you can start it with `--use-spdy=no-ssl` to force
+it to use SPDY. Point it at your server, and bam! You're running SPDY.
 
 You can also start Momentum from your code:
 
     require "momentum"
+    app = lambda { |env| [200, {"Content-Type" => "text/plain"}, "Hi via SPDY!"] }
     EM.run {
-      Momentum.start(Momentum::Adapters::Proxy.new('localhost', 3000))
+      Momentum.start(Momentum::Adapters::Defer.new(app))
     }
 
-This will start Momentum on `0.0.0.0:5555` as a proxy to an HTTP server that should be running on
-`localhost:3000`.
+For more usage examples, see the `examples/` directory.
+
 
 Backend
 -------
 As Momentum is Rack-based, the server will deliver all requests to a Rack app.
 The simplest possible solution is to just use your regular Rack app with the Momentum backend.
 SPDY requests to your app will cause your application code to be executed in the SPDY server 
-itself. 
+itself.
 
 The Momentum backend provides functionality for deferred/asynchronous responses.
-This works just like in a `Thin` environment: throwing `:async` will cause the
+This works just like in a Thin environment: throwing `:async` will cause the
 header reply to be postponed. Calling the proc stored in `env['async.callback']`
 will send the headers. If you provide a body with callback functionality, you can
 even use streaming bodies. [See here for an example from Thin.][thin_async]
+Be careful: when running your app on Momentum, you are probably using an adapter.
+While the backend provides `:async` capabilities to the app, not all adapters do.
 
-As your app is probably not asynchronous, the event loop of the SPDY server will be 
-blocked when running your app's code. This can cause timeouts and other problems if your 
-application's response time is high (i.e. greater than 20 msecs). In this case, you can 
-use an Adapter to connect the SPDY server to another backend.
+As your app is most likely not asynchronous, the event loop of the SPDY server will be 
+blocked when running your app's code. This can cause timeouts and other problems, and will
+effectively make your SPDY sever synchronous.
+In order to stay asynchronous, you should use an Adapter to offload the app execution to somewhere
+else. If you're curious, you can try out what happens without an adapter by running 
+`momentum --plain` in your app's directory.
 
 
 Adapters
 --------
 Adapters are Rack apps. They can be thought of as middleware. If you do not want your App
 to be executed within the SPDY server event loop (i.e. because it blocks), you should use an
-Adapter.
+Adapter. The purpose of adapters is to return an `:async` response very fast, so the event loop
+of the SPDY server is not blocked. Of course, the adapter has to get the response from somewhere.
+The various adapters use mechanisms that are provided by EventMachine to generate or fetch the
+response asynchronously.
 
 
 ### Momentum::Adapters::Proxy
-The `Proxy` adapter will cause all requests on the SPDY connection to be forwarded to a 
-given HTTP server. The SPDY server will act as an HTTP proxy. This way, the speedup provided 
-by SPDY's long-lived connections can improve loading times for compatible clients.
-However, no advanced features of the SPDY protocol, such as Server Push, can be used, as
-they would requirecommunication betweeen the backend and the SPDY server before the response 
-is sent.
+The `Proxy` adapter will cause all requests to be forwarded to a given HTTP server.
+The SPDY server will act as an HTTP proxy. Advanced features of the SPDY protocol, such as Server
+Push, cannot be used, as they would require communication betweeen the backend and the SPDY server
+before the response headers is sent.
+
+Internally, `EM::HttpRequest` is used to fetch the resource from the backend.
+It is recommended to use a fast backend with this adapter. This means that if your current frontend
+uses Thin or Unicorn behind an Nginx proxy, you can point the adapter directly at the backend.
 
 Note that is is _not_ a SPDY/HTTPS proxy for proxying connections to arbitrary servers
-through a SPDY tunnel as described in http://dev.chromium.org/spdy/spdy-proxy-examples.
-
-
-### Momentum::Adapters::Accelerate
-`Accelerate` will fork a custom-protocol server that listens on a Unix socket.
-Think unicorn, but without the HTTP overhead. The SPDY server will fire requests
-at that socket. This way, the SPDY EventMachine reactor can still function while 
-heavy Rack apps are processed in the Unicorn-style worker process.
-The protocol is binary with little overhead. It is custom because besides from
-regular HTTP responses, special SPDY-related messages may be sent to the SPDY server,
-such as the request for a SPDY server push.
-
-HTTP Compliance is then achieved by having a slave HTTP server that forwards requests to
-the master SPDY server.
+through a SPDY tunnel as described in http://dev.chromium.org/spdy/spdy-proxy-examples. It is merely a
+way of providing the SPDY protocol to clients without any backend configuration changes.
 
 
 ### Momentum::Adapters::Defer
-`Defer` will use the EventMachine thread pool to run your application code. No threads have to be
-spawned. This reduces overhead in comparison to the Accelerate adapter, but also requires
-your code to be thread-safe.
+`Defer` will use the EventMachine thread pool to run your application code. No subprocesses have to be
+spawned. Its architecture is very simple, as it does not require any form inter-process communication.
+This reduces overhead in comparison to the `Accelerate` adapter, but also requires your code to be threadsafe.
+As it provides the best performance, this adapter is the currently recommended one, and is used by default
+when running `momentum`.
 
-HTTP Compliance is then achieved by having a slave HTTP server that forwards requests to
-the master SPDY server.
+Backwards compatibility is important! HTTP clients should be handled by a slave HTTP server that forwards 
+requests to the master SPDY server. HTTP support for the SPDY server is a work in progress.
+
+
+### Momentum::Adapters::Accelerate
+`Accelerate` will fork a custom-protocol `Windigo` server that listens on a Unix socket.
+Think unicorn, but without the HTTP overhead. In fact the `Windigo` server is a subclass of Unicorn's
+HTTP server. The SPDY server will fire incoming requests at that socket.
+When a request is received, the backend worker will call your Rack app.
+The protocol between the SPDY and the `Windigo` server is custom because besides from regular HTTP 
+responses, special SPDY-related messages may be sent back to the SPDY server prior to the response,
+such as the request for a SPDY server Push.
+
+Note that this adapter is slower than `Defer` because of the IPC overhead, but allows for non-threadsafe
+application code.
+
+Backwards compatibility is important! HTTP clients should be handled by a slave HTTP server that forwards 
+requests to the master SPDY server. HTTP support for the SPDY server is a work in progress.
 
 
 Taking advantage of SPDY Server Push
 -------------------------------------
 A `Momentum::AppDelegate` object is available in `env['spdy']` when running on Momentum.
-The public API for this object currently consists of just one method, `push`.
+The public API for this object currently consists of just one method, `push(url)`.
 It should be called when the app can safely determine that the resource
 at `path` is going to be required to render the page.
 
-Using it requires the `Accelerate` backend. If you are not running the `Accelerate` adapter,
-calling `push` will result in a no-op. If you _are_ running that adapter, calling `push(url)`
-will initiate a SPDY Server Push to the client.
+Using it requires the `Accelerate` adapter. If you are not running on it, calling `push` will result 
+in a no-op. If you are, calling `push(url)` will initiate a SPDY Server Push to the client.
 
 The SPDY server will be informed of the app's push request, and will start processing the 
 request immediately as if was sent as a separate request by the client.
@@ -109,7 +127,7 @@ client. Information that is duplicated from the initial request consists of:
 
 Performance
 -----------
-I performe somed totally unscientific tests over a local network accessing the example app in
+I performed somed totally unscientific tests over a local network accessing the example app in
 `examples/config.ru` from a media center-style box running Debian. Times were measured 
 using the Chrome DOM inspector. The app in question displays a bare-bones HTML page, which 
 in turn loads 3 javascripts from the server, each with a size of 100KB. To test SPDY, Chrome
@@ -133,7 +151,7 @@ overhead, making the multi-connection approach faster.
     <tr>
       <th>&nbsp;</th>
       <th>Adapters::Accelerate</th>
-      <th>Adapters::Deferred</th>
+      <th>Adapters::Defer</th>
       <th>Thin</th>
     </tr>
   </thead>
