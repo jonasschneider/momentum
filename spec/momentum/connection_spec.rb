@@ -22,69 +22,115 @@ end
 describe Momentum::Connection do
   let(:backend) { stub }
   let(:connection) { Momentum::Connection.new(1).tap{|c|c.backend = backend} }
-  
+
   def connect
+    @received_frames = []
+    @parser = SPDY::Parser.new
     EM.run {
       yield
       EM.stop
     }
   end
-  
+
   def send(data)
-    connection.receive_data(data)
+    connection.receive_data(data.force_encoding('ascii-8bit'))
   end
-  
+
+  def received_data
+    connection.__sent_data
+  end
+
   def should_receive(data)
-    connection.__sent_data.should == data
+    received_data.inspect.should == data.inspect
     connection.__sent_data = ''
   end
-  
+
+  def received_frames
+    unless received_data.empty?
+      parsed = (@parser << received_data)
+      puts "parsed #{parsed.inspect} frames"
+      @received_frames += parsed
+      connection.__sent_data = ''
+    end
+    @received_frames
+  end
+
+  def should_receive_frame(data)
+    received_data.inspect.should == data.inspect
+    connection.__sent_data = ''
+  end
+
   it "sends a notice to HTTP clients" do
     connect do
-      puts "connected"
-      send("GET / HTTP/1.1\nHost: localhost\n\n")
+      send "GET / HTTP/1.1\nHost: localhost\n\n"
       should_receive Momentum::Connection::HTTP_RESPONSE
     end
   end
-  
-  let(:response) { 'asdf' }
-  
+
+  let(:response) { DummyBackendResponse.new(:headers => { 'a' => 'b' }, :body => 'test') }
+
+  it "sends back the response headers & body" do
+    connect do
+      backend.stub(:prepare => response)
+      send GET_REQUEST
+
+      received_frames.length.should == 3
+
+      headers = received_frames.shift
+      headers.class.should == SPDY::Protocol::Control::SynReply
+      headers.header.flags.should == 0
+      headers.uncompressed_data.to_h.should == { 'a' => 'b' }
+
+      body = received_frames.shift
+      body.class.should == SPDY::Protocol::Data::Frame
+      body.flags.should == 0
+      body.data.should == 'test'
+
+      fin = received_frames.shift
+      fin.class.should == SPDY::Protocol::Data::Frame
+      fin.flags.should == 1
+      fin.len.should == 0
+    end
+  end
+
+  let(:response_test) { 'asdf' }
+
   it "works as a SPDY Rack server" do
-    app = lambda { |env| [200, {"Content-Type" => "text/plain"}, [response]] }
-    
+    app = lambda { |env| [200, {"Content-Type" => "text/plain"}, [response_test]] }
+
     EM.run do
       Momentum.start(Momentum::Backend.new(app))
       EventMachine::connect 'localhost', 5555, DumbSPDYClient
     end
-    
-    DumbSPDYClient.body.should == response
+
+    DumbSPDYClient.body.should == response_test
     DumbSPDYClient.body_chunk_count.should == 2 # data and separate FIN
   end
-  
+
   it "chunks up long responses" do
     one_chunk = 4096
     app = lambda { |env| [200, {"Content-Type" => "text/plain"}, ['x'*one_chunk*3]] }
-    
+
     EM.run do
       Momentum.start(Momentum::Backend.new(app))
       EventMachine::connect 'localhost', 5555, DumbSPDYClient
     end
-    
+
     DumbSPDYClient.body_chunk_count.should == 3
   end
-  
+
   it "passes request & response headers" do
     backend = Object.new
     backend.stub(:prepare) do |req|
       req.headers['accept-encoding'].should == 'gzip,deflate,sdch'
       DummyBackendResponse.new(:headers => {'a' => 'b'})
     end
-    
+
     EM.run do
       Momentum.start(backend)
       EventMachine::connect 'localhost', 5555, DumbSPDYClient
     end
-    
+
     DumbSPDYClient.headers['a'].should == 'b'
   end
 end
