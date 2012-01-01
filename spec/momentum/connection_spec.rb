@@ -93,6 +93,22 @@ describe Momentum::Connection do
     end
   end
 
+  it "initiates a Server Push when the push callback is called" do
+    connect do
+      resp = DummyBackendResponse.new(:headers => { 'a' => 'b' }, :body => 'test', :pushes => ['/test.js'])
+      backend.stub(:prepare => resp)
+      send GET_REQUEST
+
+      received_frames.length.should == 4
+
+      push = received_frames.shift
+      push.class.should == SPDY::Protocol::Control::SynStream
+      push.associated_to_stream_id.should == 1
+      push.header.flags.should == 0
+      push.uncompressed_data.to_h.should == { 'host' => 'localhost', 'scheme' => 'http', 'path' => '/test.js' }
+    end
+  end
+
   let(:response_test) { 'asdf' }
 
   it "works as a SPDY Rack server" do
