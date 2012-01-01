@@ -44,7 +44,7 @@ module Momentum
 
           push_backend_reply.on_headers do |headers|
             send_headers stream_id, headers
-            logger.debug "[#{stream_id}] headers came in from backend"
+            logger.debug "[#{resource_stream_id}] headers came in from backend"
           end
           push_stream = Stream.new resource_stream_id, self
 
@@ -53,7 +53,7 @@ module Momentum
           end
 
           push_backend_reply.on_complete do
-            logger.debug "[#{stream_id}] Push Request completed"
+            logger.debug "[#{resource_stream_id}] Push Request completed"
             push_stream.eof!
           end
 
