@@ -26,23 +26,26 @@ module Momentum
       end
 
       def prepare!
-        old_delegate = @env['spdy']
-        push_queue = EM::Queue.new
+        @delegate = @env['spdy']
+        @push_queue = EM::Queue.new
 
-        push_queue.pop do |push_url|
-          old_delegate.push(push_url)
-        end
+        @push_queue.pop method(:push_queue_callback)
 
         @env['spdy'] = Momentum::AppDelegate.new(@req) do |what, push_url|
           case what
           when :push
-            push_queue.push(push_url)
+            @push_queue.push(push_url)
           else
             raise "Unknown callback #{what}"
           end
         end
       end
       
+      def push_queue_callback(push_url)
+        @delegate.push(push_url)
+        @push_queue.pop method(:push_queue_callback)
+      end
+
       def send_response(response)
         buffered_body = []
         response[2].each do |chunk|

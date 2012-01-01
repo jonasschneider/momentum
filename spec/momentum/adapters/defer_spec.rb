@@ -22,21 +22,24 @@ describe Momentum::Adapters::Defer do
     end
 
     let(:app) { lambda { |env|
-      puts "pushing to #{env['spdy'].inspect}"
       env['spdy'].push('/test.js')
+      env['spdy'].push('/test2.js')
       [200, {}, []]
     } }
 
     it "gets called in the main thread" do
       delegate = stub
       ran_in_thread = nil
-      delegate.stub(:push) do |url| 
+      urls = []
+      delegate.stub(:push) do |url|
+        urls << url
         ran_in_thread = Thread.current
       end
       backend_response.stub(:build_delegate => delegate)
       dispatch!
       
       ran_in_thread.should == Thread.current
+      urls.should == ['/test.js', '/test2.js']
     end
   end
 end
