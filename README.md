@@ -125,10 +125,9 @@ in a no-op. If you are, calling `push(url)` will initiate a SPDY Server Push to 
 The SPDY server will be informed of the app's push request, and will start processing the 
 request immediately as if was sent as a separate request by the client.
 
-The virtual request will look to the application like a normal GET request from the same 
-client. Information that is duplicated from the initial request consists of:
-    - Cookie
-    - User-Agent
+Per the SPDY spec, the virtual request will look to the application completely identical to
+the original request, except for the `:host`, `:scheme` and `:path` headers, which contain
+the location of the requested resource.
 
 
 Performance
