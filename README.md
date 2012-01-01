@@ -13,7 +13,7 @@ Installation & Usage
 
 Add the following to your app's `Gemfile`:
 
-    gem 'momentum', :git => 'https://github.com/jonasschneider/momentum.git'
+    gem 'momentum', :git => 'git://github.com/jonasschneider/momentum.git', :submodules => true
 
 Then download the code and start the SPDY server by running:
 
