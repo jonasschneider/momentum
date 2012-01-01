@@ -5,6 +5,7 @@ require "bundler"
 Bundler.setup
 require 'rspec'
 
+require 'spdy'
 require 'eventmachine'
 require 'em-http'
 

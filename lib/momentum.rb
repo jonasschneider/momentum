@@ -1,9 +1,4 @@
-if defined? SPDY
-  raise "Sorry, momentum is not compatible with the original 'spdy' gem at the moment."
-end
-$:.push File.expand_path("../spdy/lib", __FILE__)
-require "spdy"
-
+require 'spdy'
 require 'eventmachine'
 require 'em-http'
 
