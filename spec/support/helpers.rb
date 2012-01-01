@@ -1,3 +1,5 @@
+# -*- coding: ascii-8bit -*-
+
 ENV["RACK_ENV"] = 'test'
 require "bundler"
 Bundler.setup
