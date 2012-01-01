@@ -7,7 +7,7 @@ require "logger"
 require "momentum/version"
 require "momentum/stream"
 require "momentum/request"
-require "momentum/session"
+require "momentum/connection"
 
 require "momentum/app_delegate"
 require "momentum/backend"
@@ -30,7 +30,7 @@ module Momentum
     elsif backend_or_app.respond_to? :call
       backend = Momentum::Backend.new(backend_or_app)
     end
-    EventMachine.start_server('0.0.0.0', 5555, Momentum::Session) do |sess|
+    EventMachine.start_server('0.0.0.0', 5555, Momentum::Connection) do |sess|
       sess.backend = backend
     end
   end

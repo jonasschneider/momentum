@@ -4,7 +4,7 @@ require File.expand_path("../../support/blocking_spdy_client", __FILE__)
 require "momentum"
 require "em-synchrony"
 
-describe Momentum::Session do
+describe Momentum::Connection do
   it "sends a notice to HTTP clients" do
     app = lambda { |env| [200, {"Content-Type" => "text/plain"}, ['ohai']] }
 
@@ -15,7 +15,7 @@ describe Momentum::Session do
       s.send("GET / HTTP/1.1\nHost: localhost\n\n")
       response = s.read
 
-      response.should == Momentum::Session::HTTP_RESPONSE
+      response.should == Momentum::Connection::HTTP_RESPONSE
 
       EM.stop
     end

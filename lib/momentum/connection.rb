@@ -1,5 +1,5 @@
 module Momentum
-  class Session < ::EventMachine::Connection
+  class Connection < EventMachine::Connection
     HTTP_RESPONSE = "HTTP/1.0 505 HTTP Version not supported\r\nConnection: close\r\n\r\n<h1>505 HTTP Version not supported</h1>This is a SPDY server."
     attr_accessor :backend
     
