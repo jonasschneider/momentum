@@ -8,16 +8,21 @@ Additional features are provided by adapters that enable Momentum to act as a pr
 old HTTP server, or run heavy Rack apps (Rails, I'm looking at you!) in separate threads or processes.
 
 
-Usage
------
-Suppose you have added `momentum` to your app's `Gemfile`, you can start the SPDY server by running:
+Installation & Usage
+--------------------
 
-    bundle exec momentum
+Add the following to your app's `Gemfile`:
+
+    gem 'momentum', :git => 'https://github.com/jonasschneider/momentum.git'
+
+Then download the code and start the SPDY server by running:
+
+    $ bundle install
+    $ bundle exec momentum
 
 The `momentum` command behaves just like `rackup`, it will try to run a `config.ru` file in the 
-current directory.
-This will start Momentum on `0.0.0.0:5555` with the `Defer` adapter (see below).
-If you have a recent version of Chrome/Chromium, you can start it with `--use-spdy=no-ssl` to force
+current directory. Momentum will be started on `0.0.0.0:5555` with the `Defer` adapter (see below).
+If you have a recent version of Chrome/Chromium, use the command line flag `--use-spdy=no-ssl` to force
 it to use SPDY. Point it at your server, and bam! You're running SPDY.
 
 You can also start Momentum from your code:
