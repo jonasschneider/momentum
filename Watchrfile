@@ -5,8 +5,11 @@ def run(cmd)
 end
 
 def run_spec(args)
-  #run("spin push #{args}")
-  run("bundle exec rspec --fail-fast #{args}")
+  if `which spin`.empty?
+    run("bundle exec rspec #{args}")
+  else
+    run("spin push #{args}")
+  end
 end
 
 def spec(file)
