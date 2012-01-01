@@ -1,0 +1,3 @@
+[submodule "spdy"]
+	path = spdy
+	url = https://jonasschneider@github.com/jonasschneider/spdy.git
