@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
-  
+
   s.add_development_dependency "rspec"
   s.add_development_dependency "rake"
   s.add_development_dependency "webmock"
@@ -25,4 +25,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "eventmachine", "~> 1.0.0.beta4"
   s.add_runtime_dependency "em-http-request"
   s.add_runtime_dependency "unicorn"
+
+  # spdy deps
+  s.add_dependency "bindata"
+  s.add_dependency "ffi-zlib"
 end
