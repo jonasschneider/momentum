@@ -1,3 +1,0 @@
-[submodule "spdy"]
-	path = spdy
-	url = git://github.com/jonasschneider/spdy.git
