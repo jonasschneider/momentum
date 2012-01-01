@@ -1,5 +1,19 @@
 require "timeout"
 
+shared_examples "Backend server push" do
+  context "server push" do
+    let(:app) { lambda { |env|
+      env['spdy'].push('/test.js')
+      [given_response_status, given_response_headers, [given_response_body]]
+    } }
+    
+    it "works" do
+      dispatch!
+      @pushes.should == ['/test.js']
+    end
+  end
+end
+
 shared_examples "Momentum backend" do 
   let(:rack_env) { given_request_headers }
   let(:valid_request_headers) { { 'method' => 'get', 'version' => 'HTTP/1.1', 'url' => '/', 'host' => 'localhost', 'scheme' => 'http' } }
@@ -13,22 +27,28 @@ shared_examples "Momentum backend" do
     :headers => given_request_headers
   ) }
   
-  let(:reply) { backend.prepare(request) }
+  let(:backend_response) { backend.prepare(request) }
   
   def dispatch!
     return if @dispatched
-    reply.on_complete do
+    backend_response.on_complete do
       EM.stop
     end
     
     @headers = {}.tap do |headers|
-      reply.on_headers do |h|
+      backend_response.on_headers do |h|
         headers.merge!(h)
       end
     end
     
     @body = ''.tap do |data|
-      reply.on_body do |c|
+      backend_response.on_body do |c|
+        data << c
+      end
+    end
+    
+    @pushes = [].tap do |data|
+      backend_response.on_push do |c|
         data << c
       end
     end
@@ -36,7 +56,7 @@ shared_examples "Momentum backend" do
     Timeout::timeout(4) {
       EM.run do
         dispatch_start_time = Time.now
-        reply.dispatch!
+        backend_response.dispatch!
         dispatch_duration = Time.now - dispatch_start_time
         dispatch_duration.should < 0.02
       end

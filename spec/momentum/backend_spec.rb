@@ -8,6 +8,16 @@ describe Momentum::Backend do
   let(:backend) { Momentum::Backend.new(app) }
 
   include_examples "Momentum backend"
+  include_examples "Backend server push"
+
+  context "env['spdy']" do
+    let(:app) { lambda { |env| [200, {"Content-Type" => "text/plain"}, [env['spdy']]] } }
+
+    it "gets set to the value of build_delegate" do
+      backend_response.stub(:build_delegate => 1337)
+      response_body.should == "1337"
+    end
+  end
 
   context "env['spdy'].momentum_request" do
     let(:app) { lambda { |env| [200, {"Content-Type" => "text/plain"}, [env['spdy'].momentum_request.inspect]] } }

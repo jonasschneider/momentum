@@ -14,8 +14,11 @@ module Momentum
       def on_complete(&blk)
         @on_complete = blk
       end
-
       
+      def on_push(&blk)
+        @on_push = blk
+      end
+
       def initialize(app, req)
         @app = app
         @req = req
@@ -26,7 +29,7 @@ module Momentum
         env['async.callback'] = lambda {|response|
           process_response(response)
         }
-        env['spdy'] = Momentum::AppDelegate.new(@req)
+        env['spdy'] = build_delegate
         
         response = AsyncResponse
         catch(:async)  do
@@ -35,7 +38,19 @@ module Momentum
         process_response(response)
       end
 
+      def build_delegate
+        Momentum::AppDelegate.new(@req) do |what, push_url|
+          case what
+          when :push
+            @on_push.call(push_url) if @on_push
+          else
+            raise "Unknown callback #{what}"
+          end
+        end
+      end
+
       protected
+
       def process_response(response)
         return if response.first == AsyncResponse.first
         
