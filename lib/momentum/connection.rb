@@ -10,11 +10,12 @@ module Momentum
       @df = SPDY::Protocol::Data::Frame.new
       @sr = SPDY::Protocol::Control::SynReply.new({:zlib_session => @zlib})
       @ss = SPDY::Protocol::Control::SynStream.new({:zlib_session => @zlib})
+      @h = SPDY::Protocol::Control::Headers.new({:zlib_session => @zlib})
 
       @next_stream_id = 0
       @parser = ::SPDY::Parser.new
       @parser.on_headers_complete do |stream_id, associated_stream, priority, headers|
-        req = Request.new(stream_id: stream_id, associated_stream: associated_stream, priority: priority, headers: headers)
+        req = Request.new(headers: headers)
         logger.info "[#{stream_id}] got a request to #{req.uri}"
         request_received_at = Time.now
 
@@ -27,10 +28,36 @@ module Momentum
           logger.debug "[#{stream_id}] Server Push of #{url} requested"
           parsed = URI.parse(url)
           original_uri = req.uri.dup
-          original_uri.host ||= parsed.host
-          original_uri.scheme ||= parsed.host
-          original_uri.path ||= parsed.path
-          resource_stream_id = send_syn_stream(stream_id,  { 'host' => 'localhost', 'scheme' => 'http', 'path' => '/test.js' })
+          original_uri.host = parsed.host if parsed.host
+          original_uri.scheme = parsed.scheme if parsed.scheme
+          original_uri.path = parsed.path if parsed.path
+          resource_stream_id = send_syn_stream(stream_id,  { 'host' => original_uri.host, 'scheme' => original_uri.scheme, 'path' => original_uri.path })
+
+          backend_headers = headers.dup
+          backend_headers['host'] = original_uri.host
+          backend_headers['scheme'] = original_uri.scheme
+          backend_headers['path'] = original_uri.path
+          backend_headers.delete 'url' # Fu, chrome
+
+          push_request = Request.new(headers: backend_headers)
+          push_backend_reply = @backend.prepare(push_request)
+
+          push_backend_reply.on_headers do |headers|
+            send_headers stream_id, headers
+            logger.debug "[#{stream_id}] headers came in from backend"
+          end
+          push_stream = Stream.new resource_stream_id, self
+
+          push_backend_reply.on_body do |chunk|
+            push_stream.write chunk
+          end
+
+          push_backend_reply.on_complete do
+            logger.debug "[#{stream_id}] Push Request completed"
+            push_stream.eof!
+          end
+
+          push_backend_reply.dispatch!
         end
 
         reply.on_headers do |headers|
@@ -114,6 +141,11 @@ module Momentum
     def send_syn_reply(stream, headers)
       logger.debug "< SYN_REPLY stream=#{stream}"
       send_data @sr.create({:stream_id => stream, :headers => headers}).to_binary_s
+    end
+
+    def send_headers(stream, headers)
+      logger.debug "< HEADERS stream=#{stream}"
+      send_data @h.create({:stream_id => stream, :headers => headers}).to_binary_s
     end
 
     def send_data_frame(stream, data, fin = false)

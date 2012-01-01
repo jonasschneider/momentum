@@ -2,6 +2,7 @@ require File.expand_path("../../support/helpers", __FILE__)
 
 require "momentum"
 require "em-synchrony"
+require "awesome_print"
 
 require File.expand_path("../../support/blocking_spdy_client", __FILE__)
 require File.expand_path("../../support/dumb_spdy_client", __FILE__)
@@ -48,7 +49,6 @@ describe Momentum::Connection do
   def received_frames
     unless received_data.empty?
       parsed = (@parser << received_data)
-      puts "parsed #{parsed.inspect} frames"
       @received_frames += parsed
       connection.__sent_data = ''
     end
@@ -93,19 +93,40 @@ describe Momentum::Connection do
     end
   end
 
+  # TODO: Avoid push recursion
   it "initiates a Server Push when the push callback is called" do
     connect do
-      resp = DummyBackendResponse.new(:headers => { 'a' => 'b' }, :body => 'test', :pushes => ['/test.js'])
-      backend.stub(:prepare => resp)
+      backend.stub(:prepare) do |req|
+        if req.spdy_info[:headers]['url'] == '/'
+          DummyBackendResponse.new :headers => { 'a' => 'b' }, :body => 'test', :pushes => ['/test.js']
+        else
+          DummyBackendResponse.new :headers => { 'second' => 'value' }, :body => 'my asset'
+        end
+      end
       send GET_REQUEST
-
-      received_frames.length.should == 4
 
       push = received_frames.shift
       push.class.should == SPDY::Protocol::Control::SynStream
       push.associated_to_stream_id.should == 1
       push.header.flags.should == 0
-      push.uncompressed_data.to_h.should == { 'host' => 'localhost', 'scheme' => 'http', 'path' => '/test.js' }
+      push.uncompressed_data.to_h.should == { 'host' => 'titan', 'scheme' => 'http', 'path' => '/test.js' }
+
+      headers = received_frames.shift
+      headers.class.should == SPDY::Protocol::Control::Headers
+      headers.header.flags.should == 0
+      headers.uncompressed_data.to_h.should == { 'second' => 'value' }
+
+      body = received_frames.shift
+      body.class.should == SPDY::Protocol::Data::Frame
+      body.flags.should == 0
+      body.data.should == 'my asset'
+
+      fin = received_frames.shift
+      fin.class.should == SPDY::Protocol::Data::Frame
+      fin.flags.should == 1
+      fin.len.should == 0
+
+      received_frames.length.should == 3 # original SYN_REPLY, DATA, FIN
     end
   end
 

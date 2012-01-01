@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rspec"
   s.add_development_dependency "rake"
   s.add_development_dependency "webmock"
+  s.add_development_dependency "awesome_print"
   s.add_development_dependency "em-synchrony", "~> 0.2.0"
 
   s.add_runtime_dependency "rack"
