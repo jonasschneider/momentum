@@ -221,5 +221,6 @@ Credits
 -------
 Thanks to Ilya Grigorik for the great [SPDY parser gem](https://github.com/igrigorik/spdy).
 Inspired by Roman Shterenzon's [SPDY server](https://github.com/romanbsd/spdy).
+And to https://github.com/inkel/spdy-examples for the sample images ;)
 
 [thin_async]: https://github.com/macournoyer/thin/blob/master/example/async_app.ru
