@@ -31,7 +31,7 @@ module Momentum
         push_backend_reply = @backend.prepare(push_request)
 
         push_backend_reply.on_headers do |headers|
-          @session.send_headers stream_id, headers
+          @session.send_headers resource_stream_id, headers
           logger.debug "[#{resource_stream_id}] headers came in from backend"
         end
         push_stream = Stream.new resource_stream_id, @session
