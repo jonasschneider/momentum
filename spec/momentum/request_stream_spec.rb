@@ -5,7 +5,6 @@ require File.expand_path("../../support/dummy_backend_response", __FILE__)
 
 # TODO: Avoid push recursion
 # TODO: Proper error handling
-# TODO: change #send_data_frame to #write so the Stream is concerned with chunking
 describe Momentum::RequestStream do
   let(:response_headers) { { 'a' => 'b' } }
   let(:response_body) { 'test' }
