@@ -10,9 +10,9 @@ module Momentum
       send_buffer = ''
 
       #@streams << req
-      reply = @backend.prepare(req)
+      @reply = @backend.prepare(req)
 
-      reply.on_push do |url|
+      @reply.on_push do |url|
         logger.debug "[#{stream_id}] Server Push of #{url} requested"
         parsed = URI.parse(url)
         original_uri = req.uri.dup
@@ -48,22 +48,24 @@ module Momentum
         push_backend_reply.dispatch!
       end
 
-      reply.on_headers do |headers|
+      @reply.on_headers do |headers|
         @session.send_syn_reply stream_id, headers
         logger.debug "[#{stream_id}] SYN_REPLY sent after #{(Time.now - request_received_at).to_f}s"
       end
       stream = Stream.new stream_id, @session
 
-      reply.on_body do |chunk|
+      @reply.on_body do |chunk|
         stream.write chunk
       end
 
-      reply.on_complete do
+      @reply.on_complete do
         logger.debug "[#{stream_id}] Request completed, took #{ (Time.now - request_received_at).to_f}s start-to-finish"
         stream.eof!
       end
+    end
 
-      reply.dispatch!
+    def process_request!
+      @reply.dispatch!
     end
 
     def logger

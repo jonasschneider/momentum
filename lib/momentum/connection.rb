@@ -15,7 +15,8 @@ module Momentum
       @next_stream_id = 0
       @parser = ::SPDY::Parser.new
       @parser.on_headers_complete do |stream_id, associated_stream, priority, headers|
-        RequestStream.new(stream_id, self, headers, backend)
+        stream = RequestStream.new(stream_id, self, headers, backend)
+        stream.process_request!
       end
 
       @parser.on_body             { |stream_id, data|
