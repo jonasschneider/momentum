@@ -51,6 +51,11 @@ describe Momentum::RequestStream do
         if req.spdy_info[:headers]['url'] == '/'
           DummyBackendResponse.new :headers => response_headers, :body => response_body, :pushes => ['/test.js']
         else
+          req.spdy_info[:headers]['url'].should == '/test.js'
+          req.spdy_info[:headers]['host'].should == 'localhost'
+          req.spdy_info[:headers]['scheme'].should == 'http'
+          req.spdy_info[:headers]['method'].should == 'get'
+
           DummyBackendResponse.new :headers => pushed_resource_headers, :body => pushed_resource_body
         end
       end

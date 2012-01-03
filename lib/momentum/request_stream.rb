@@ -38,28 +38,26 @@ module Momentum
     # TODO: Set unidirectional flag
     def handle_push(url_text)
       parsed = URI.parse(url_text)
-      logger.debug "[#{@stream_id}] Server Push of #{url_text} requested => #{parsed}"
 
       push_url = @request.uri.dup
       push_url.host = parsed.host if parsed.host
       push_url.scheme = parsed.scheme if parsed.scheme
       push_url.path = parsed.path if parsed.path
+
+      logger.debug "[#{@stream_id}] Server Push of #{url_text} requested, push URL is #{push_url}  (path #{push_url.path})"
+
       resource_stream_id = @session.send_syn_stream(@stream_id,  { 'url' => push_url.to_s })
 
-      logger.debug "[#{@stream_id}] Interpreting as #{push_url}"
-
       backend_headers = @request.headers.dup
-      backend_headers.delete 'host'
-      backend_headers.delete 'scheme'
       backend_headers.delete 'path'
-      backend_headers['url'] = push_url
+      backend_headers['url'] = push_url.path
 
       push_request = Request.new(headers: backend_headers)
       push_backend_reply = @backend.prepare(push_request)
 
       push_backend_reply.on_headers do |headers|
         @session.send_headers resource_stream_id, headers
-        logger.debug "[#{@resource_stream_id}] headers came in from backend"
+        logger.debug "[#{resource_stream_id}] headers came in from backend"
       end
       push_stream = Stream.new resource_stream_id, @session
 
@@ -68,7 +66,7 @@ module Momentum
       end
 
       push_backend_reply.on_complete do
-        logger.debug "[#{@resource_stream_id}] Push Request completed"
+        logger.debug "[#{resource_stream_id}] Push Request completed"
         push_stream.eof!
       end
 
