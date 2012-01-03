@@ -4,21 +4,13 @@ require "momentum"
 
 describe Momentum::Request do
   let(:valid_headers) { { 'method' => 'get', 'version' => 'HTTP/1.1', 'url' => '/test.css', 'host' => 'titan:5555', 'scheme' => 'http' } }
-  %w(method version host scheme).each do |header|
-    it "raises when #{header} is missing" do
+  %w(method url version).each do |header|
+    it "raises when :#{header} is missing" do
       valid_headers.delete header
       lambda {
         Momentum::Request.new headers: valid_headers
       }.should raise_error
     end
-  end
-
-  it "raises when neither path nor url are present" do
-    valid_headers.delete 'url'
-    valid_headers.delete 'path'
-    lambda {
-      Momentum::Request.new headers: valid_headers
-    }.should raise_error
   end
 
   describe "#to_rack_env" do

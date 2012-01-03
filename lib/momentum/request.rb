@@ -1,7 +1,7 @@
 module Momentum
   class Request
     attr_accessor :spdy_info
-    
+
     PATH_INFO         = 'PATH_INFO'.freeze
     QUERY_STRING      = 'QUERY_STRING'.freeze
     REQUEST_METHOD    = 'REQUEST_METHOD'.freeze
@@ -11,7 +11,7 @@ module Momentum
     SERVER_SOFTWARE   = 'SERVER_SOFTWARE'.freeze
     HTTP_VERSION      = 'HTTP_VERSION'.freeze
     REMOTE_ADDR       = 'REMOTE_ADDR'.freeze
-  
+
     RACK_INPUT        = 'rack.input'.freeze
     RACK_VERSION      = 'rack.version'.freeze
     RACK_ERRORS       = 'rack.errors'.freeze
@@ -19,8 +19,8 @@ module Momentum
     RACK_MULTIPROCESS = 'rack.multiprocess'.freeze
     RACK_RUN_ONCE     = 'rack.run_once'.freeze
     RACK_SCHEME       = 'rack.url_scheme'.freeze
-    
-    REQUIRED          = %w(method version host scheme) # spec says include path here, but don't as Chrome doesn't send it
+
+    REQUIRED          = %w(method url version) # Todo draft 3: don't use :url
 
     # spdy_info[:headers] is a hash mapping strings to strings, containing the http headers from the SPDY request.
     # spdy_info[:remote_addr] is the remote IP address
@@ -29,13 +29,12 @@ module Momentum
       REQUIRED.each do |header|
         raise "#{header} is required" if headers[header].nil?
       end
-      raise "need either path or url" if headers['path'].nil? && headers['url'].nil?
     end
-    
+
     def headers
       spdy_info[:headers]
     end
-    
+
     def to_rack_env
       env = {
         REQUEST_METHOD    => spdy_info[:headers]['method'],
@@ -66,15 +65,16 @@ module Momentum
       end
       env
     end
-    
+
+    # Todo draft 3: use :path header instead of :url
     def uri
-      @uri ||= URI.parse(spdy_info[:headers]['scheme'] +  '://' + spdy_info[:headers]['host'] + requested_path)
+      @uri ||= URI.parse(scheme +  '://' + spdy_info[:headers]['host'] + spdy_info[:headers]['url'])
     end
+
     protected
-    
-    def requested_path
-      # Chrome 16 seems to fail the spec here - :url is sent there instead of :path. Fix that.
-      spdy_info[:headers]['path'] || spdy_info[:headers]['url']
+
+    def scheme
+      spdy_info[:headers]['scheme'] || 'http'
     end
   end
 end
