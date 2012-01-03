@@ -45,24 +45,13 @@ describe Momentum::RequestStream do
       session.should_receive(:send_syn_reply).with(1, response_headers)
       session.should_receive(:send_data_frame).with(1, response_body, false)
       session.should_receive(:send_fin).with(1)
+
       stream.process_request!
     end
   end
 
   let(:response_test) { 'asdf' }
 
-  it "works as a SPDY Rack server" do
-    pending
-    app = lambda { |env| [200, {"Content-Type" => "text/plain"}, [response_test]] }
-
-    EM.run do
-      Momentum.start(Momentum::Backend.new(app))
-      EventMachine::connect 'localhost', 5555, DumbSPDYClient
-    end
-
-    DumbSPDYClient.body.should == response_test
-    DumbSPDYClient.body_chunk_count.should == 2 # data and separate FIN
-  end
 
   it "chunks up long responses" do
     pending

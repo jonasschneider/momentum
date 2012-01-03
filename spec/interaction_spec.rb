@@ -1,11 +1,24 @@
 require File.expand_path("../support/helpers", __FILE__)
 
+require File.expand_path("../support/dumb_spdy_client", __FILE__)
 require File.expand_path("../support/blocking_spdy_client", __FILE__)
 
 require "momentum"
 require "em-synchrony"
 
 describe Momentum do
+  it "works as a SPDY Rack server" do
+    app = lambda { |env| [200, {"Content-Type" => "text/plain"}, ['ohai']] }
+
+    EM.run do
+      Momentum.start(Momentum::Backend.new(app))
+      EventMachine::connect 'localhost', 5555, DumbSPDYClient
+    end
+
+    DumbSPDYClient.body.should == 'ohai'
+    DumbSPDYClient.body_chunk_count.should == 2 # data and separate FIN
+  end
+
   context "Cool client" do
     let(:response) { 'test' }
     it "works" do
@@ -37,7 +50,7 @@ describe Momentum do
           fin.stream_id.should == 1
           fin.flags.should == 1
           fin.len.should == 0
-          
+
           EM.stop
         end
       end
