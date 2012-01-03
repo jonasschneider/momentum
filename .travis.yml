@@ -4,3 +4,4 @@ rvm:
   - ruby-head
 
 env: RUBYOPT=-Ku
+before_install: git submodule update --init
