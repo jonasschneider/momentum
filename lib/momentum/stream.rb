@@ -16,31 +16,31 @@ module Momentum
       end
     end
     
-    def write(data)
+    def send_data(data)
       @data << data.force_encoding('ASCII-8BIT')
-      send_data
+      send_data_chunk
     end
     
     protected
     
-    def send_data
+    def send_data_chunk
       return if @data.empty?
       chunk = @data.slice!(0, CHUNK_SIZE)
       if @data.empty?
-        send_body chunk, @eof
+        send_data_frame chunk, @eof
       else
         unless @chunking_data
           @chunking_data = true
           EM.next_tick do
             @chunking_data = false
-            send_data
+            send_data_chunk
           end
         end
-        send_body chunk
+        send_data_frame chunk
       end
     end
     
-    def send_body(chunk, fin = false)
+    def send_data_frame(chunk, fin = false)
       @session.send_data_frame @stream_id, chunk, fin
       @sent_bytes += chunk.size
       @session.logger.debug "< FIN stream=#{@stream_id} after #{@sent_bytes} bytes sent" if fin
