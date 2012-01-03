@@ -20,7 +20,7 @@ module Momentum
     RACK_RUN_ONCE     = 'rack.run_once'.freeze
     RACK_SCHEME       = 'rack.url_scheme'.freeze
 
-    REQUIRED          = %w(method url version) # Todo draft 3: don't use :url
+    REQUIRED          = %w(method url version host) # Todo draft 3: don't use :url
 
     # spdy_info[:headers] is a hash mapping strings to strings, containing the http headers from the SPDY request.
     # spdy_info[:remote_addr] is the remote IP address

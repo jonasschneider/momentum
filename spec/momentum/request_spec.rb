@@ -4,7 +4,7 @@ require "momentum"
 
 describe Momentum::Request do
   let(:valid_headers) { { 'method' => 'get', 'version' => 'HTTP/1.1', 'url' => '/test.css', 'host' => 'titan:5555', 'scheme' => 'http' } }
-  %w(method url version).each do |header|
+  %w(method url version host).each do |header|
     it "raises when :#{header} is missing" do
       valid_headers.delete header
       lambda {
