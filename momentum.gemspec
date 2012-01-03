@@ -26,5 +26,4 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "eventmachine", "~> 1.0.0.beta4"
   s.add_runtime_dependency "em-http-request"
   s.add_runtime_dependency "spdy"
-  s.add_runtime_dependency "unicorn"
 end
