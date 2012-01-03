@@ -37,7 +37,7 @@ module Momentum
         push_stream = Stream.new resource_stream_id, @session
 
         push_backend_reply.on_body do |chunk|
-          push_stream.write chunk
+          push_stream.send_data chunk
         end
 
         push_backend_reply.on_complete do
@@ -54,7 +54,7 @@ module Momentum
       end
 
       @reply.on_body do |chunk|
-        write chunk
+        send_data chunk
       end
 
       @reply.on_complete do

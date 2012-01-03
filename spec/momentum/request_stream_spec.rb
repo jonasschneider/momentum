@@ -16,35 +16,17 @@ describe Momentum::RequestStream do
   let(:session) { double('Session', :logger => double(:debug => true, :info => true)) }
   let(:stream) { described_class.new(1, session, request_headers, backend) }
 
+  before :each do
+    session.stub(:send_data_frame)
+  end
+
   it "sends back the response headers & body" do
     session.should_receive(:send_syn_reply).with(1, response_headers)
-    session.should_receive(:send_data_frame).with(1, response_body, false)
+    stream.should_receive(:send_data).with(response_body)
     session.should_receive(:send_fin).with(1)
     stream.process_request!
   end
 
-  context "Responses larger than the chunk size" do
-    let(:chunk_size) { Momentum::Stream::CHUNK_SIZE }
-    let(:backend_response) { DummyBackendResponse.new(:headers => response_headers, :body => 'x'*chunk_size*3) }
-
-    it "sends the response in multiple data frames" do
-      pending
-      session.should_receive(:send_syn_reply).with(1, response_headers)
-      times_called = 0
-      session.should_receive(:send_data_frame) do
-        times_called += 1
-      end
-      session.should_receive(:send_fin) do
-        EM.stop
-      end
-      Timeout.timeout(1) do
-        EM.run do
-          stream.process_request!
-        end
-      end
-      times_called.should == 3
-    end
-  end
 
   context "Request headers" do
     let(:session) { double('Session').as_null_object }
@@ -58,7 +40,6 @@ describe Momentum::RequestStream do
       end
 
       session.should_receive(:send_syn_reply).with(1, response_headers)
-
       stream.process_request!
     end
   end
@@ -80,11 +61,11 @@ describe Momentum::RequestStream do
     it "initiates a Server Push when the push callback is called" do
       session.should_receive(:send_syn_stream).with(1, {"host"=>"localhost", "scheme"=>"http", "path"=>"/test.js"}) { 3 }
       session.should_receive(:send_headers).with(3, pushed_resource_headers)
-      session.should_receive(:send_data_frame).with(3, pushed_resource_body, false)
+      session.should_receive(:send_data_frame).with(3, pushed_resource_body, false) # FIXME: cannot stub on the pushed stream here
       session.should_receive(:send_fin).with(3)
 
       session.should_receive(:send_syn_reply).with(1, response_headers)
-      session.should_receive(:send_data_frame).with(1, response_body, false)
+      stream.should_receive(:send_data).with(response_body)
       session.should_receive(:send_fin).with(1)
 
       stream.process_request!
