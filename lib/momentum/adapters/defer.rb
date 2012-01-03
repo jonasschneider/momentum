@@ -3,21 +3,24 @@ module Momentum
     class Defer
       def initialize(app)
         @app = app
+
+        # Fire up the thread pool
+        EM.threadpool_size = 100
         EM.defer proc{}, proc{}
       end
-      
+
       def call(env)
         dup._call(env)
       end
-      
+
       def _call(env)
         @env = env
         prepare!
         EM.defer method(:run_app), method(:send_response)
-        
+
         throw(:async)
       end
-      
+
       def run_app
         @process_start = Time.now
         r = @app.call(@env)
@@ -40,7 +43,7 @@ module Momentum
           end
         end
       end
-      
+
       def push_queue_callback(push_url)
         @delegate.push(push_url)
         @push_queue.pop method(:push_queue_callback)
