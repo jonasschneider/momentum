@@ -17,7 +17,7 @@ describe Momentum::RequestStream do
   let(:stream) { described_class.new(1, session, request_headers, backend) }
 
   before :each do
-    session.stub(:send_data_frame)
+    session.stub(:send_data_frame) # We check for Stream#send_data
   end
 
   it "sends back the response headers & body" do
@@ -26,7 +26,6 @@ describe Momentum::RequestStream do
     session.should_receive(:send_fin).with(1)
     stream.process_request!
   end
-
 
   context "Request headers" do
     let(:session) { double('Session').as_null_object }
