@@ -7,6 +7,8 @@ require "logger"
 require "momentum/version"
 require "momentum/stream"
 require "momentum/request"
+require "momentum/request_stream"
+
 require "momentum/connection"
 
 require "momentum/app_delegate"
