@@ -191,8 +191,8 @@ overhead, making the multi-connection approach faster.
 
 Compliance
 ----------
-Momentum is meant to be compliant with this version of the SPDY spec:
-http://mbelshe.github.com/SPDY-Specification/draft-mbelshe-spdy-00.xml
+Momentum is meant to be compliant with version 2 of the SPDY spec:
+http://www.chromium.org/spdy/spdy-protocol/spdy-protocol-draft2
 
 
 Credits
