@@ -34,22 +34,25 @@ module Momentum
 
     protected
 
-    def handle_push(url)
-      logger.debug "[#{@stream_id}] Server Push of #{url} requested"
-      parsed = URI.parse(url)
-      original_uri = @request.uri.dup
-      original_uri.host = parsed.host if parsed.host
-      original_uri.scheme = parsed.scheme if parsed.scheme
-      original_uri.path = parsed.path if parsed.path
-      resource_stream_id = @session.send_syn_stream(@stream_id,  { 'host' => original_uri.host, 'scheme' => original_uri.scheme, 'path' => original_uri.path })
+    # TODO draft3: send :host, :scheme, :path instead of :url
+    # TODO: Set unidirectional flag
+    def handle_push(url_text)
+      parsed = URI.parse(url_text)
+      logger.debug "[#{@stream_id}] Server Push of #{url_text} requested => #{parsed}"
 
+      push_url = @request.uri.dup
+      push_url.host = parsed.host if parsed.host
+      push_url.scheme = parsed.scheme if parsed.scheme
+      push_url.path = parsed.path if parsed.path
+      resource_stream_id = @session.send_syn_stream(@stream_id,  { 'url' => push_url.to_s })
 
+      logger.debug "[#{@stream_id}] Interpreting as #{push_url}"
 
       backend_headers = @request.headers.dup
-      backend_headers['host'] = original_uri.host
-      backend_headers['scheme'] = original_uri.scheme
-      backend_headers['path'] = original_uri.path
-      backend_headers.delete 'url' # Fu, chrome
+      backend_headers.delete 'host'
+      backend_headers.delete 'scheme'
+      backend_headers.delete 'path'
+      backend_headers['url'] = push_url
 
       push_request = Request.new(headers: backend_headers)
       push_backend_reply = @backend.prepare(push_request)

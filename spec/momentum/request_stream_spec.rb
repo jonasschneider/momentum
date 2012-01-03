@@ -57,7 +57,9 @@ describe Momentum::RequestStream do
     end
 
     it "initiates a Server Push when the push callback is called" do
-      session.should_receive(:send_syn_stream).with(1, {"host"=>"localhost", "scheme"=>"http", "path"=>"/test.js"}) { 3 }
+      # Draft 3:
+      # session.should_receive(:send_syn_stream).with(1, {"host"=>"localhost", "scheme"=>"http", "path"=>"/test.js"}) { 3 }
+      session.should_receive(:send_syn_stream).with(1, {"url"=>"http://localhost/test.js"}) { 3 }
       session.should_receive(:send_headers).with(3, pushed_resource_headers)
       session.should_receive(:send_data_frame).with(3, pushed_resource_body, false) # FIXME: cannot stub on the pushed stream here
       session.should_receive(:send_fin).with(3)
