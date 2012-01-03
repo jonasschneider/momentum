@@ -14,5 +14,3 @@ run lambda{ |env|
 
   [200, {"Content-Type" => tp}, body]
 }
-
-#A: 80ms, D: 20ms, T: 3ms
