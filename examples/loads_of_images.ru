@@ -10,7 +10,7 @@ run lambda{ |env|
   else
     path = env["PATH_INFO"][1..-1]
     if File.exist? path
-      body = File.read("#{path}")
+      body = File.open("#{path}")
     else
       puts "could not find #{path}"
       body = []
