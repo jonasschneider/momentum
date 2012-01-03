@@ -52,15 +52,14 @@ module Momentum
         @session.send_syn_reply stream_id, headers
         logger.debug "[#{stream_id}] SYN_REPLY sent after #{(Time.now - request_received_at).to_f}s"
       end
-      stream = Stream.new stream_id, @session
 
       @reply.on_body do |chunk|
-        stream.write chunk
+        write chunk
       end
 
       @reply.on_complete do
         logger.debug "[#{stream_id}] Request completed, took #{ (Time.now - request_received_at).to_f}s start-to-finish"
-        stream.eof!
+        eof!
       end
     end
 
