@@ -5,7 +5,7 @@ Momentum is a Rack handler for SPDY clients. That means, it receives connections
 from SPDY clients and runs Rack apps. It's that simple.
 
 Additional features are provided by adapters that enable Momentum to act as a proxy to your plain
-old HTTP server, or run heavy Rack apps (Rails, I'm looking at you!) in separate threads or processes.
+old HTTP server, or run heavy Rack apps (Rails, I'm looking at you!) in separate threads.
 
 
 Installation & Usage
@@ -54,7 +54,7 @@ While the backend provides `:async` capabilities to the app, not all adapters do
 
 As your app is most likely not asynchronous, the event loop of the SPDY server will be
 blocked when running your app's code. This can cause timeouts and other problems, and will
-effectively make your SPDY sever synchronous.
+effectively make your SPDY sever synchronous, and you don't want that.
 In order to stay non-blocking, you should use an adapter to offload the app execution to somewhere
 else. If you're curious, you can try out what happens without an adapter by running
 `momentum --plain` in your app's directory.
@@ -66,19 +66,20 @@ Adapters are Rack apps. They can be thought of as middleware. If you do not want
 to be executed within the SPDY server event loop (i.e. because it blocks), you should use an
 adapter. The design of adapters is to return an `:async` response immediately, so the event loop
 of the SPDY server is not blocked. Of course, the adapter has to get the real response from somewhere.
-The various adapters use mechanisms that are provided by EventMachine to generate or fetch the
+The adapters use mechanisms that are provided by EventMachine to generate or fetch the
 response asynchronously.
 
 
 ### Momentum::Adapters::Proxy
-The `Proxy` adapter will cause all requests to be forwarded to a given HTTP server.
-The SPDY server will act as an HTTP proxy. Advanced features of the SPDY protocol, such as Server
-Push, cannot be used, as they would require communication betweeen the backend and the SPDY server
-before the response headers is sent.
+The `Proxy` adapter will cause all requests to be forwarded to a given HTTP server. The SPDY server
+will act as an HTTP proxy.
+Internally, `EM::HttpRequest` is used to asynchronously fetch the resource from the backend.
 
-Internally, `EM::HttpRequest` is used to fetch the resource from the backend.
-It is recommended to use a fast backend with this adapter. This means that if your current frontend
-uses Thin or Unicorn behind an Nginx proxy, you can point the adapter directly at the backend.
+Advanced features of the SPDY protocol, such as Server Push, currently cannot be used, as they would
+require communication betweeen the backend and the SPDY server before the response is sent.
+
+Trivial performance tests showed that using the Proxy adapter in combination with a Thin/nginx setup
+yields the best results for serving clients over the internet for sites with many assets (see below.)
 
 Note that is is _not_ a SPDY/HTTPS proxy for proxying connections to arbitrary servers
 through a SPDY tunnel as described in http://dev.chromium.org/spdy/spdy-proxy-examples. It is merely a
@@ -86,11 +87,10 @@ way of providing the SPDY protocol to clients without any backend configuration 
 
 
 ### Momentum::Adapters::Defer
-`Defer` will use the EventMachine thread pool to run your application code. No subprocesses have to be
-spawned. Its architecture is very simple, as it does not require any form of inter-process communication.
-This reduces overhead in comparison to the `Accelerate` adapter, but also requires your code to be threadsafe.
-As it provides the best performance, this adapter is the currently recommended one, and is used by default
-when running `momentum`.
+`Defer` will use the EventMachine thread pool (configured with a size of 100) to run your application code.
+This requires your code to be threadsafe. This adapter is used when running the `momentum` command.
+
+Server Push (see below) is possible with this adapter.
 
 Backwards compatibility is important! HTTP clients should be handled by a slave HTTP server that forwards
 requests to the master SPDY server. HTTP support for the SPDY server is a work in progress.
