@@ -119,7 +119,7 @@ Performance
 -----------
 This project is in development.
 Since one of the main goals of SPDY is to improve loading times, performance is considered vital for Momentum.
-I performed somed totally unscientific performance tests. The app in question is located in `examples/lots_of_images.ru`.
+I performed some totally unscientific performance tests. The app in question is located in `examples/lots_of_images.ru`.
 It displays a bare-bones HTML page, which in turn loads 100 thumbnail-sized JPEG images from the server.
 
 Loading times were measured using the Chrome DOM inspector, reading the time of the DOMContentLoaded event,
@@ -282,6 +282,6 @@ Credits
 -------
 Thanks to Ilya Grigorik for the great [SPDY parser gem](https://github.com/igrigorik/spdy).
 Inspired by Roman Shterenzon's [SPDY server](https://github.com/romanbsd/spdy).
-And to https://github.com/inkel/spdy-examples for the sample images ;)
+And thanks to https://github.com/inkel/spdy-examples for the sample images ;)
 
 [thin_async]: https://github.com/macournoyer/thin/blob/master/example/async_app.ru
