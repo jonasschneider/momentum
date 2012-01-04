@@ -1,17 +1,37 @@
-Momentum, a SPDY Server for Rack apps
-=====================================
+Momentum, a SPDY Server for HTTP backends
+=========================================
 
 Momentum is a Rack handler for SPDY clients. That means, it receives connections
 from SPDY clients and runs Rack apps. It's that simple.
 
-Additional features are provided by adapters that enable Momentum to act as a proxy to your plain
-old HTTP server, or run heavy Rack apps (Rails, I'm looking at you!) in separate threads.
+But that does not mean you can only run Rack apps on it.
+Additional features are provided by adapters that enable Momentum to act as a proxy to your existing
+HTTP backend.
 
 
-Installation & Usage
---------------------
+Installation
+------------
 
-Add the following to your app's `Gemfile`:
+### If you want to run Momentum as a proxy
+Installation is quite complicated at the moment, as there is no gem release yet. First, clone this repo and dependencies:
+
+    $ git clone git://github.com/jonasschneider/momentum.git
+    $ cd momentum
+    $ git submodule update --init
+    $ bundle install
+
+Then go ahead and run the proxy example:
+
+    $ bundle exec ruby examples/proxy.rb 80
+
+This will start Momentum on `0.0.0.0:5555` with the `Proxy` adapter (see below), forwarding all requests to
+an HTTP server running on port 80.
+If you have a recent version of Chrome/Chromium, use the command line flag `--use-spdy=no-ssl` to force
+it to use SPDY. Point it at your server, and bam! You're running SPDY.
+
+
+### If you want to run your Rack app on Momentum
+Add the following to your `Gemfile`:
 
     gem 'momentum', :git => 'git://github.com/jonasschneider/momentum.git', :submodules => true
 
@@ -21,17 +41,9 @@ Then download the code and start the SPDY server by running:
     $ bundle exec momentum
 
 The `momentum` command behaves just like `rackup`, it will try to run a `config.ru` file in the
-current directory. Momentum will be started on `0.0.0.0:5555` with the `Defer` adapter (see below).
+current directory. Momentum will be started on `0.0.0.0:5555` with the `Defer` adapter (see below.)
 If you have a recent version of Chrome/Chromium, use the command line flag `--use-spdy=no-ssl` to force
 it to use SPDY. Point it at your server, and bam! You're running SPDY.
-
-You can also start Momentum from your code:
-
-    require "momentum"
-    app = lambda { |env| [200, {"Content-Type" => "text/plain"}, ["Hi via SPDY!"]] }
-    EM.run {
-      Momentum.start(Momentum::Adapters::Defer.new(app))
-    }
 
 For more usage examples, see the `examples/` directory.
 
