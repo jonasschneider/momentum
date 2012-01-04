@@ -117,76 +117,145 @@ to the current Chromium implementation), which contain the location of the reque
 
 Performance
 -----------
-I performed somed totally unscientific tests over a local network accessing the example app in
-`examples/config.ru` from a media center-style box running Debian. Times were measured
-using the Chrome DOM inspector. The app in question displays a bare-bones HTML page, which
-in turn loads 3 javascripts from the server, each with a size of 100KB. To test SPDY, Chrome
-was started with the `--use-spdy=no-ssl` flag, which forces all connections to be SPDY.
-This means that SPDY negotiation is not included in the benchmark.
-For comparison, a Thin server was started running the same app, accessed by Chrome without
-command line arguments.
-Traditional benchmark approaches using tools like `ab` are inappropriate because SPDY is not optimized
-for raw request benchmarking, but instead focuses on the results given by real browsers.
-Besides that, there is no `ab` equivalent for SPDY. High-concurrency benchmarks are still to be done.
+This project is in development.
+Since one of the main goals of SPDY is to improve loading times, performance is considered vital for Momentum.
+I performed somed totally unscientific performance tests. The app in question is located in `examples/lots_of_images.ru`.
+It displays a bare-bones HTML page, which in turn loads 100 thumbnail-sized JPEG images from the server.
 
-This project is in development. The results are, to be honest, horrible.
-This is unacceptable given the fact that one of the main goals of SPDY is to improve loading
-times, and so performance is a main goal for the Momentum project.
-To defend the Momentum results a bit: Thin is a very fast competitor, but is unable to handle
-slow clients gracefully without a reverse proxy in front of it.
-Also, the results could have been very different had the test been performed over the internet.
-Over a local connection, the advantage of the single connection is negated by the protocol
-overhead, making the multi-connection approach faster.
+Loading times were measured using the Chrome DOM inspector, reading the time of the DOMContentLoaded event,
+which indicates the arrival of the main HTML document, and the onLoad event, which indicates that all of the
+images have been loaded.
+
+To test SPDY, Chrome was started with the `--use-spdy=no-ssl` flag, which forces Chrome to talk SPDY everywhere.
+This means that TLS SPDY negotiation is not included in the benchmark. For testing the HTTP servers,
+Chrome was started without command-line flags.
+
+The first, smaller group of tests was performed over a local network. The server was running on
+a media center-style box under Debian. For the second group of tests, a small Amazon EC2 instance was fired up.
 
 <table>
   <thead>
     <tr>
       <th>&nbsp;</th>
-      <th>Adapters::Defer</th>
-      <th>Thin</th>
+      <th>DOMContentLoaded</th>
+      <th>onLoad</th>
     </tr>
   </thead>
 
   <tbody>
     <tr>
-      <td colspan=4><b>Page components</b></td>
-    </tr>
-    <tr>
-      <td>Initial request, load time of main page</td>
-      <td>27ms</td>
-      <td>8ms</td>
-    </tr>
-    <tr>
-      <td>Subsequent request, load time of main page</td>
-      <td>15ms</td>
-      <td>8ms</td>
-    </tr>
-    <tr>
-      <td>Average load time of the javascripts (100KB)</td>
-      <td>124ms</td>
-      <td>20ms</td>
-    </tr>
-    <tr>
-      <td>Subsequent request, time until javascript is requested</td>
-      <td>210ms</td>
-      <td>180ms</td>
+      <td colspan=3><b>LAN connection</b></td>
     </tr>
 
     <tr>
-      <td colspan=4><b>Totals</b></td>
+      <td>WEBrick (for comparison)</td>
+      <td>0,2s</td>
+      <td>1,5s</td>
     </tr>
     <tr>
-      <td>Initial request, time until DOMContentLoaded</td>
-      <td>450ms</td>
-      <td>380ms</td>
+      <td>Thin</td>
+      <td>0,2s</td>
+      <td>0,8ms</td>
+    </tr>
+
+
+    <tr>
+      <td colspan=3><b>Internet connection</b></td>
+    </tr>
+
+    <tr>
+      <td>WEBrick (for comparison)</td>
+      <td>0,5s</td>
+      <td>4,5s</td>
     </tr>
     <tr>
-      <td>Subsequent request, time until DOMContentLoaded</td>
-      <td>400ms</td>
-      <td>380ms</td>
+      <td>Unicorn, 1 worker</td>
+      <td>0,6s</td>
+      <td>6,5s</td>
+    </tr>
+    <tr>
+      <td>Unicorn, 4 workers</td>
+      <td>0,6s</td>
+      <td>5,9s</td>
+    </tr>
+    <tr>
+      <td>Unicorn, 4 workers behind nginx</td>
+      <td>0,5s</td>
+      <td>3,0s</td>
+    </tr>
+    <tr>
+      <td>Thin</td>
+      <td>0,5s</td>
+      <td>4,5s</td>
+    </tr>
+    <tr>
+      <td>Thin behind nginx</td>
+      <td>0,4s</td>
+      <td>2,6s</td>
+    </tr>
+
+    <tr>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+    </tr>
+
+    <tr>
+      <td>Momentum/Defer</td>
+      <td>0,4s</td>
+      <td>2,3s</td>
+    </tr>
+    <tr>
+      <td>Momentum/Defer adapter (subsequent)</td>
+      <td>0,3s</td>
+      <td>2,1s</td>
+    </tr>
+    <tr>
+      <td>Momentum/Proxy in front of Thin</td>
+      <td>0,5s</td>
+      <td>2,7s</td>
+    </tr>
+    <tr>
+      <td>Momentum/Proxy in front of Thin (subsequent)</td>
+      <td>0,4s</td>
+      <td>2,5s</td>
+    </tr>
+    <tr>
+      <td>Momentum/Proxy in front of nginx and Thin</td>
+      <td>0,5s</td>
+      <td>2,4s</td>
+    </tr>
+    <tr>
+      <td>Momentum/Proxy in front of nginx and Thin (subsequent)</td>
+      <td>0,3s</td>
+      <td>2,3s</td>
     </tr>
   </tbody>
 </table>
+
+Over a local connection, the advantage of the single connection is negated by the protocol
+overhead, making the multi-connection approach much faster. Additional tests were therefore ommited.
+
+But over a remote connection, the results look drastically different. As can be seen, the high-performant
+servers Thin and Unicorn are meant to be run behind a reverse proxy. There, they achieve great loading times.
+Measuring subsequent requests showed that no speedup was gained. Those results are therefore ommited.
+
+The Momentum tests were performed on both initial and subsequent tests to show the improvement caused
+by the held SPDY connection. Momentum with the Defer adapter seems to struggle with the high
+concurrency caused by the amount of simultaneous requests, but the simplicity of the adapter makes it
+faster than the Proxy adapter in front of Thin.
+
+The best results are achieved with the Proxy adapter proxying to nginx, which in turn proxies to Thin.
+This is surprising given the overhead of the multiple proxies, but shows the power that lies in the
+simple addition of a SPDY server to an established nginx/Thin configuration.
+
+The test may seem biased, as the amount of assets to be loaded is quite high, which favors SPDY.
+But, looking at sites such as http://www.nytimes.com/, asset counts in this dimension are quite normal.
+For future investigation, different asset file sizes should be considered.
+Traditional benchmark approaches using tools like `ab` are deemed inappropriate because SPDY is not optimized
+for raw request benchmarking, but instead focuses on the results given by real browsers.
+Besides that, there is no `ab` equivalent for SPDY. High-concurrency benchmarks are therefore still to be done,
+and are a work in progress.
 
 
 Compliance
