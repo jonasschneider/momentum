@@ -218,12 +218,6 @@ The results of the two test groups should not be cross-compared, as the system s
     </tr>
 
     <tr>
-      <td>&nbsp;</td>
-      <td>&nbsp;</td>
-      <td>&nbsp;</td>
-    </tr>
-
-    <tr>
       <td>Momentum/Defer</td>
       <td>0,4s</td>
       <td>2,3s</td>
@@ -261,22 +255,20 @@ overhead, making the multi-connection approach much faster. Additional tests wer
 
 But over a remote connection, the results look drastically different. As can be seen, the high-performant
 servers Thin and Unicorn are meant to be run behind a reverse proxy. There, they achieve great loading times.
-Measuring subsequent requests showed that no speedup was gained. Those results are therefore ommited.
+Measuring subsequent requests showed that no speedup was gained. Those results are ommited.
 
 The Momentum tests were performed on both initial and subsequent tests to show the improvement caused
-by the held SPDY connection. Momentum with the Defer adapter seems to struggle with the high
-concurrency caused by the amount of simultaneous requests, but the simplicity of the adapter makes it
-faster than the Proxy adapter in front of Thin. Sadly, testing the Proxy adapter with Unicorn behind nginx
-was forgotten.
+by the held SPDY connection. The simplicity of the Defer makes it faster than the Proxy adapter in front of
+Thin. Sadly, testing the Proxy adapter with Unicorn behind nginx was forgotten.
 
-Therefore, the best results are achieved with the Proxy adapter proxying to nginx, which in turn proxies to Thin.
-This is surprising given the overhead of the multiple proxies, but shows the power that lies in the
-simple addition of a SPDY server to an established nginx/Thin configuration (and probably also Unicorn/nginx.)
+Therefore, the best results were achieved with the Defer adapter and the Proxy adapter proxying to nginx,
+which in turn proxies to Thin. This is surprising given the overhead of the multiple proxies, but shows the power
+that lies in the simple addition of a SPDY server to an existing nginx/Thin configuration (and probably also Unicorn/nginx.)
 
 The test may seem biased, as the amount of assets to be loaded is quite high, which favors SPDY.
 But, looking at sites such as http://www.nytimes.com/, asset counts in this dimension are quite normal.
 For future investigation, different asset file sizes should be considered, especially larger stylesheet
-and javascript files.
+and JavaScript files.
 
 
 
