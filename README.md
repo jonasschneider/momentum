@@ -125,6 +125,9 @@ It displays a bare-bones HTML page, which in turn loads 100 thumbnail-sized JPEG
 Loading times were measured using the Chrome DOM inspector, reading the time of the DOMContentLoaded event,
 which indicates the arrival of the main HTML document, and the onLoad event, which indicates that all of the
 images have been loaded.
+Traditional benchmark approaches using tools like `ab` are deemed inappropriate because SPDY is not optimized
+for raw request benchmarking, but instead focuses on the results given by real browsers.
+Besides that, there is no `ab` equivalent for SPDY. High-concurrency benchmarks are therefore still to be done.
 
 To test SPDY, Chrome was started with the `--use-spdy=no-ssl` flag, which forces Chrome to talk SPDY everywhere.
 This means that TLS SPDY negotiation is not included in the benchmark. For testing the HTTP servers,
@@ -132,6 +135,7 @@ Chrome was started without command-line flags.
 
 The first, smaller group of tests was performed over a local network. The server was running on
 a media center-style box under Debian. For the second group of tests, a small Amazon EC2 instance was fired up.
+The results of the two test groups should not be cross-compared, as the system specs differ vastly.
 
 <table>
   <thead>
@@ -155,9 +159,28 @@ a media center-style box under Debian. For the second group of tests, a small Am
     <tr>
       <td>Thin</td>
       <td>0,2s</td>
-      <td>0,8ms</td>
+      <td><b>0,8s</b></td>
     </tr>
-
+    <tr>
+      <td>Unicorn, 4 workers</td>
+      <td>0,3s</td>
+      <td>1,0s</td>
+    </tr>
+    <tr>
+      <td>Momentum/Defer</td>
+      <td>0,3s</td>
+      <td>2,5s</td>
+    </tr>
+    <tr>
+      <td>Momentum/Proxy in front of Unicorn</td>
+      <td>0,3s</td>
+      <td>3,4s</td>
+    </tr>
+    <tr>
+      <td>Momentum/Proxy in front of Thin</td>
+      <td>0,2s</td>
+      <td>2,3s</td>
+    </tr>
 
     <tr>
       <td colspan=3><b>Internet connection</b></td>
@@ -181,7 +204,7 @@ a media center-style box under Debian. For the second group of tests, a small Am
     <tr>
       <td>Unicorn, 4 workers behind nginx</td>
       <td>0,5s</td>
-      <td>3,0s</td>
+      <td><b>3,0s</b></td>
     </tr>
     <tr>
       <td>Thin</td>
@@ -191,7 +214,7 @@ a media center-style box under Debian. For the second group of tests, a small Am
     <tr>
       <td>Thin behind nginx</td>
       <td>0,4s</td>
-      <td>2,6s</td>
+      <td><b>2,6s</b></td>
     </tr>
 
     <tr>
@@ -208,7 +231,7 @@ a media center-style box under Debian. For the second group of tests, a small Am
     <tr>
       <td>Momentum/Defer adapter (subsequent)</td>
       <td>0,3s</td>
-      <td>2,1s</td>
+      <td><b>2,2s</b></td>
     </tr>
     <tr>
       <td>Momentum/Proxy in front of Thin</td>
@@ -228,7 +251,7 @@ a media center-style box under Debian. For the second group of tests, a small Am
     <tr>
       <td>Momentum/Proxy in front of nginx and Thin (subsequent)</td>
       <td>0,3s</td>
-      <td>2,3s</td>
+      <td><b>2,3s</b></td>
     </tr>
   </tbody>
 </table>
@@ -243,19 +266,18 @@ Measuring subsequent requests showed that no speedup was gained. Those results a
 The Momentum tests were performed on both initial and subsequent tests to show the improvement caused
 by the held SPDY connection. Momentum with the Defer adapter seems to struggle with the high
 concurrency caused by the amount of simultaneous requests, but the simplicity of the adapter makes it
-faster than the Proxy adapter in front of Thin.
+faster than the Proxy adapter in front of Thin. Sadly, testing the Proxy adapter with Unicorn behind nginx
+was forgotten.
 
-The best results are achieved with the Proxy adapter proxying to nginx, which in turn proxies to Thin.
+Therefore, the best results are achieved with the Proxy adapter proxying to nginx, which in turn proxies to Thin.
 This is surprising given the overhead of the multiple proxies, but shows the power that lies in the
-simple addition of a SPDY server to an established nginx/Thin configuration.
+simple addition of a SPDY server to an established nginx/Thin configuration (and probably also Unicorn/nginx.)
 
 The test may seem biased, as the amount of assets to be loaded is quite high, which favors SPDY.
 But, looking at sites such as http://www.nytimes.com/, asset counts in this dimension are quite normal.
-For future investigation, different asset file sizes should be considered.
-Traditional benchmark approaches using tools like `ab` are deemed inappropriate because SPDY is not optimized
-for raw request benchmarking, but instead focuses on the results given by real browsers.
-Besides that, there is no `ab` equivalent for SPDY. High-concurrency benchmarks are therefore still to be done,
-and are a work in progress.
+For future investigation, different asset file sizes should be considered, especially larger stylesheet
+and javascript files.
+
 
 
 Compliance
