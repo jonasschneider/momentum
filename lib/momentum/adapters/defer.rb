@@ -22,10 +22,7 @@ module Momentum
       end
 
       def run_app
-        @process_start = Time.now
-        r = @app.call(@env)
-        #Momentum.logger.debug "[#{@env['spdy'].momentum_request.spdy_info[:stream_id]}] app processing took #{(Time.now - @process_start).to_f} secs"
-        r
+        @app.call(@env)
       end
 
       def prepare!
