@@ -1,14 +1,20 @@
 module Momentum
   class RequestStream < Stream
-    def initialize(stream_id, session, headers, backend)
+    def initialize(stream_id, session, backend)
       super(stream_id, session)
       @session, @backend = session, backend
-      @request = Request.new(headers: headers)
+      @headers = {}
       @request_received_at = Time.now
-      logger.info "[#{@stream_id}] got a request to #{@request.uri}"
+    end
+
+    def add_headers(headers)
+      @headers.merge! headers
     end
 
     def process_request!
+      @request = Request.new(headers: @headers)
+
+      logger.info "[#{@stream_id}] got a request to #{@request.uri}"
       reply = @backend.prepare(@request)
 
       reply.on_push do |url|

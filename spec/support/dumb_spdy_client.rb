@@ -13,14 +13,14 @@ class DumbSPDYClient < EventMachine::Connection
      @body_chunk_count += 1
    end
    
-   @parser.on_headers_complete do |a, s, d, headers|
+   @parser.on_headers do |stream, headers|
      DumbSPDYClient.headers = headers
    end
      
    @parser.on_message_complete do
      DumbSPDYClient.body = @body
      DumbSPDYClient.body_chunk_count = @body_chunk_count
-     EventMachine::stop_event_loop
+     EM.stop
    end
    
    send_data GET_REQUEST

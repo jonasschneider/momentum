@@ -14,17 +14,27 @@ module Momentum
 
       @next_stream_id = 0
       @parser = ::SPDY::Parser.new
-      @parser.on_headers_complete do |stream_id, associated_stream, priority, headers|
-        stream = RequestStream.new(stream_id, self, headers, backend)
-        stream.process_request!
+      @streams = {}
+
+      @parser.on_open do |stream_id, associated, pri|
+        @streams[stream_id] = RequestStream.new(stream_id, self, backend)
       end
 
-      @parser.on_body             { |stream_id, data|
+      @parser.on_headers do |stream_id, headers|
+        stream = @streams[stream_id]
+        raise "invalid stream #{stream_id.class}" unless stream
+        stream.add_headers(headers)
+      end
 
-      }
-      @parser.on_message_complete { |stream_id|
+      @parser.on_body do |stream_id, data|
+        # TODO
+      end
 
-      }
+      @parser.on_message_complete do |stream_id|
+        stream = @streams[stream_id]
+        raise "invalid stream #{stream_id.class}" unless stream
+        stream.process_request!
+      end
 
       @parser.on_ping do |id|
         logger.debug "> Ping #{id}"
@@ -33,8 +43,8 @@ module Momentum
         send_data pong.to_binary_s
       end
 
-      @streams = []
       @could_be_http = true
+      end_t = Time.now
     end
 
     def post_init

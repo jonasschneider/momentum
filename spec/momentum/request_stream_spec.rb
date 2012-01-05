@@ -13,7 +13,11 @@ describe Momentum::RequestStream do
 
   let(:backend) { double(:prepare => backend_response) }
   let(:session) { double('Session', :logger => double(:debug => true, :info => true)) }
-  let(:stream) { described_class.new(1, session, request_headers, backend) }
+  let(:stream) do
+    described_class.new(1, session, backend).tap do |stream|
+      stream.add_headers(request_headers)
+    end
+  end
 
   before :each do
     session.stub(:send_data_frame) # We check for Stream#send_data
