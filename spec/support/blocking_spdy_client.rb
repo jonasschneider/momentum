@@ -62,7 +62,7 @@ class BlockingSPDYClient
   end
 
   def read(len)
-    x = @sock.read(len).force_encoding('ASCII-8BIT')
+    x = @sock.read(len)
     raise "read fail" unless x.bytesize == len
     x
   end
