@@ -283,11 +283,15 @@ For future investigation, different asset file sizes should be considered, espec
 and JavaScript files.
 
 
-
 Compliance
 ----------
 Momentum is meant to be compliant with version 2 of the SPDY spec:
 http://www.chromium.org/spdy/spdy-protocol/spdy-protocol-draft2
+
+
+License
+-------
+Released under the MIT License - Copyright (c) 2011-2012 Jonas Schneider
 
 
 Credits
