@@ -15,7 +15,7 @@ class BlockingSPDYClient
       "url"=>url,"version"=>"HTTP/1.1"
     }
 
-    send_packet sr.create({:stream_id => 1, :headers => headers})
+    send_packet sr.create({:stream_id => 1, :headers => headers, :flags => 1})
   end
 
   def send_packet(pckt)
