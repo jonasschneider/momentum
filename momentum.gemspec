@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.authors     = ["Jonas Schneider"]
   s.email       = ["mail@jonasschneider.com"]
   s.homepage    = ""
-  s.summary     = %q{A SPDY Server for HTTP backends.}
+  s.summary     = %q{A Rack handler for SPDY clients.}
   s.description = %q{Momentum is a SPDY server. It can run Rack apps and proxy requests to an HTTP backend.}
 
   s.files         = `git ls-files`.split("\n")

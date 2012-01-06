@@ -1,5 +1,5 @@
-Momentum, a SPDY Server in Ruby.
-================================
+Momentum, a SPDY Server
+=======================
 
 Momentum is a Rack handler for SPDY clients. That means, it receives connections
 from SPDY clients and runs Rack apps. It's that simple.
