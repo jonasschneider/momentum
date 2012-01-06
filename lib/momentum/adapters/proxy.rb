@@ -34,7 +34,7 @@ module Momentum
 
         headers['X-Forwarded-For'] = req.spdy_info[:remote_addr]
 
-        http = EventMachine::HttpRequest.new(url).send(req.headers['method'], :head => headers, :body => req.body)
+        http = EventMachine::HttpRequest.new(url).setup_request(req.headers['method'].downcase, :head => headers, :body => req.body)
         body = Body.new
 
         http.headers do |headers|
