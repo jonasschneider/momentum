@@ -52,9 +52,13 @@ module Momentum
     def post_init
       peername = get_peername
       if peername
-        @peer = Socket.unpack_sockaddr_in(peername).pop
+        @peer = remote_address
         logger.info "Connection from: #{@peer}"
       end
+    end
+
+    def remote_address
+      Socket.unpack_sockaddr_in(peername).pop
     end
 
     def send_data(data)
