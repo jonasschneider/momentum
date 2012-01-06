@@ -4,6 +4,7 @@ module Momentum
       super(stream_id, session)
       @session, @backend = session, backend
       @headers = {}
+      @body = ''
       @request_received_at = Time.now
     end
 
@@ -11,8 +12,12 @@ module Momentum
       @headers.merge! headers
     end
 
+    def add_body(chunk)
+      @body << chunk
+    end
+
     def process_request!
-      @request = Request.new(headers: @headers)
+      @request = Request.new(headers: @headers, body: @body)
 
       logger.info "[#{@stream_id}] got a request to #{@request.uri}"
       reply = @backend.prepare(@request)

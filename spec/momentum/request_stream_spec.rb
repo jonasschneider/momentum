@@ -30,6 +30,19 @@ describe Momentum::RequestStream do
     stream.process_request!
   end
 
+  context "Request body" do
+    let(:session) { double('Session').as_null_object }
+
+    it "passes request body" do
+      backend.stub(:prepare) do |req|
+        req.spdy_info[:body].should == 'ohai'
+        DummyBackendResponse.new(:headers => response_headers)
+      end
+      stream.add_body('ohai')
+      stream.process_request!
+    end
+  end
+
   context "Request headers" do
     let(:session) { double('Session').as_null_object }
 
@@ -41,7 +54,6 @@ describe Momentum::RequestStream do
         DummyBackendResponse.new(:headers => response_headers)
       end
 
-      session.should_receive(:send_syn_reply).with(1, response_headers)
       stream.process_request!
     end
   end
