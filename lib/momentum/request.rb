@@ -35,6 +35,10 @@ module Momentum
       spdy_info[:headers]
     end
 
+    def body
+      spdy_info[:body]
+    end
+
     def to_rack_env
       env = {
         REQUEST_METHOD    => spdy_info[:headers]['method'],

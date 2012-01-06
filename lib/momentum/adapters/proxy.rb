@@ -30,7 +30,7 @@ module Momentum
         url.host = @host
         url.port = @port
 
-        http = EventMachine::HttpRequest.new(url).get :head => req.headers
+        http = EventMachine::HttpRequest.new(url).send(req.headers['method'], :head => req.headers, :body => req.body)
         body = Body.new
         
         http.headers do |headers|
