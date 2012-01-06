@@ -26,8 +26,10 @@ module Momentum
         stream.add_headers(headers)
       end
 
-      @parser.on_body do |stream_id, data|
-        # TODO
+      @parser.on_body do |stream_id, chunk|
+        stream = @streams[stream_id]
+        raise "invalid stream #{stream_id.class}" unless stream
+        stream.add_body(chunk)
       end
 
       @parser.on_message_complete do |stream_id|

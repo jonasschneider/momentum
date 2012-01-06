@@ -25,8 +25,6 @@ describe Momentum::Connection do
   let(:connection) { Momentum::Connection.new(1).tap{|c|c.backend = backend} }
 
   def connect
-    @received_frames = []
-    @parser = SPDY::Parser.new
     EM.run {
       yield
       EM.stop
@@ -46,24 +44,28 @@ describe Momentum::Connection do
     connection.__sent_data = ''
   end
 
-  def received_frames
-    unless received_data.empty?
-      parsed = (@parser << received_data)
-      @received_frames += parsed
-      connection.__sent_data = ''
-    end
-    @received_frames
-  end
-
-  def should_receive_frame(data)
-    received_data.inspect.should == data.inspect
-    connection.__sent_data = ''
-  end
-
   it "sends a notice to HTTP clients" do
     connect do
       send "GET / HTTP/1.1\nHost: localhost\n\n"
       should_receive Momentum::Connection::HTTP_RESPONSE
+    end
+  end
+
+  it "adds sent DATA frames to the request body" do
+    connect do
+      zlib = SPDY::Zlib.new
+
+      pckt = SPDY::Protocol::Control::SynStream.new({:zlib_session => zlib})
+      send pckt.create({:stream_id => 0, :headers => {}}).to_binary_s
+
+      Momentum::RequestStream.any_instance.should_receive(:add_body).with('ohai')
+      Momentum::RequestStream.any_instance.should_receive(:add_body).with(' there')
+
+      data = SPDY::Protocol::Data::Frame.new({:zlib_session => zlib})
+      send data.create({:stream_id => 0, :data => 'ohai'}).to_binary_s
+
+      data = SPDY::Protocol::Data::Frame.new({:zlib_session => zlib})
+      send data.create({:stream_id => 0, :data => ' there'}).to_binary_s
     end
   end
 end
