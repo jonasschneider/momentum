@@ -2,6 +2,7 @@ module Momentum
   class Connection < EventMachine::Connection
     HTTP_RESPONSE = "HTTP/1.0 505 HTTP Version not supported\r\nConnection: close\r\n\r\n<h1>505 HTTP Version not supported</h1>This is a SPDY server."
     attr_accessor :backend
+    attr_reader :peer
 
     def initialize(*args)
       super
@@ -52,13 +53,9 @@ module Momentum
     def post_init
       peername = get_peername
       if peername
-        @peer = remote_address
+        @peer = Socket.unpack_sockaddr_in(peername).pop
         logger.info "Connection from: #{@peer}"
       end
-    end
-
-    def remote_address
-      Socket.unpack_sockaddr_in(peername).pop
     end
 
     def send_data(data)

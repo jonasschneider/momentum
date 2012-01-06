@@ -12,7 +12,7 @@ describe Momentum::RequestStream do
   let(:request_headers) { { 'method' => 'get', 'version' => 'HTTP/1.1', 'url' => '/', 'host' => 'localhost', 'scheme' => 'http' } }
 
   let(:backend) { double(:prepare => backend_response) }
-  let(:session) { double('Session', :logger => double(:debug => true, :info => true)) }
+  let(:session) { double('Session').as_null_object }
   let(:stream) do
     described_class.new(1, session, backend).tap do |stream|
       stream.add_headers(request_headers)
@@ -30,9 +30,21 @@ describe Momentum::RequestStream do
     stream.process_request!
   end
 
-  context "Request body" do
-    let(:session) { double('Session').as_null_object }
+  context "spdy_info[:remote_addr]" do
+    let(:address) { '127.0.0.1' }
 
+    it "gets set to the connection's remote IP" do
+      session.stub(:peer) { address }
+
+      backend.should_receive(:prepare) do |req|
+        req.spdy_info[:remote_addr].should == address
+      end
+
+      stream.process_request!
+    end
+  end
+
+  context "Request body" do
     it "passes request body" do
       backend.stub(:prepare) do |req|
         req.spdy_info[:body].should == 'ohai'
@@ -44,8 +56,6 @@ describe Momentum::RequestStream do
   end
 
   context "Request headers" do
-    let(:session) { double('Session').as_null_object }
-
     it "passes request headers" do
       backend = Object.new
       backend.stub(:prepare) do |req|

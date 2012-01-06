@@ -17,7 +17,7 @@ module Momentum
     end
 
     def process_request!
-      @request = Request.new(headers: @headers, body: @body)
+      @request = Request.new(headers: @headers, body: @body, remote_addr: @session.peer)
 
       logger.info "[#{@stream_id}] got a request to #{@request.uri}"
       reply = @backend.prepare(@request)
