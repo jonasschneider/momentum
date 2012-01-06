@@ -21,13 +21,13 @@ module Momentum
   REJECTED_HEADERS = ['Accept-Ranges', 'Connection', 'P3p', 'Ppserver',
     'Server', 'Transfer-Encoding', 'Vary']
 
-  def self.start(backend_or_app)
+  def self.start(backend_or_app, port = 5555)
     if backend_or_app.respond_to? :prepare
       backend = backend_or_app
     elsif backend_or_app.respond_to? :call
       backend = Momentum::Backend.new(backend_or_app)
     end
-    EventMachine.start_server('0.0.0.0', 5555, Momentum::Connection) do |sess|
+    EventMachine.start_server('0.0.0.0', port, Momentum::Connection) do |sess|
       sess.backend = backend
     end
   end

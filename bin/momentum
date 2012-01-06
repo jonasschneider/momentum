@@ -4,13 +4,16 @@ require "rack"
 
 EM.run {
   wrap = ARGV.shift != '--plain'
-  app = Rack::Server.new.app
+  serv = Rack::Server.new
+  app = serv.app
+  port = serv.options[:Port]
   if wrap
     app = Momentum::Adapters::Defer.new(app)
   end
-  
-  Momentum.start(app)
-  puts ">> Momentum running on 0.0.0.0:5555"
+
+  puts ">> Momentum running on 0.0.0.0:#{port}"
+
+  Momentum.start(app, port)
   trap(:INT) {
     puts ">> Exiting."
     EventMachine::stop_event_loop
