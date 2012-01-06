@@ -1,18 +1,16 @@
-Momentum, a SPDY Server for HTTP backends
-=========================================
+Momentum, a SPDY Server in Ruby.
+================================
 
 Momentum is a Rack handler for SPDY clients. That means, it receives connections
 from SPDY clients and runs Rack apps. It's that simple.
 
-But that does not mean you can only run Rack apps on it.
-Additional features are provided by adapters that enable Momentum to act as a proxy to your existing
-HTTP backend.
+*But that doesn't mean you can only run your Rack app on it.*
+Adapters enable Momentum to act as a proxy to your existing HTTP backend, and should you want to,
+you can also run your Rack app in seperate threads.
 
 
 Installation
 ------------
-
-### If you want to run Momentum as a proxy
 Installation is quite complicated at the moment, as there is no gem release yet. First, clone this repo and dependencies:
 
     $ git clone git://github.com/jonasschneider/momentum.git
@@ -27,23 +25,7 @@ Then go ahead and run the proxy example:
 This will start Momentum on `0.0.0.0:5555` with the `Proxy` adapter (see below), forwarding all requests to
 an HTTP server running on port 80.
 If you have a recent version of Chrome/Chromium, use the command line flag `--use-spdy=no-ssl` to force
-it to use SPDY. Point it at your server, and bam! You're running SPDY.
-
-
-### If you want to run your Rack app on Momentum
-Add the following to your `Gemfile`:
-
-    gem 'momentum', :git => 'git://github.com/jonasschneider/momentum.git', :submodules => true
-
-Then download the code and start the SPDY server by running:
-
-    $ bundle install
-    $ bundle exec momentum
-
-The `momentum` command behaves just like `rackup`, it will try to run a `config.ru` file in the
-current directory. Momentum will be started on `0.0.0.0:5555` with the `Defer` adapter (see below.)
-If you have a recent version of Chrome/Chromium, use the command line flag `--use-spdy=no-ssl` to force
-it to use SPDY. Point it at your server, and bam! You're running SPDY.
+it to use SPDY. Point it at `your_server:5555`, and bam! You're running SPDY.
 
 For more usage examples, see the `examples/` directory.
 
@@ -54,22 +36,34 @@ As Momentum is Rack-based, the server will deliver all requests to a Rack app.
 This Rack app is the argument to `Momentum.start`.
 The simplest possible solution is to just use your regular Rack app with the Momentum backend.
 SPDY requests to your app will cause your application code to be executed in the SPDY server
-itself.
+itself. But you probably don't want this, for several reasons.
 
-The Momentum backend provides functionality for deferred/asynchronous responses.
-This works just like in a Thin environment: throwing `:async` will cause the
-header reply to be postponed. Calling the proc stored in `env['async.callback']`
-will send the headers. If you provide a body with callback functionality, you can
-even use streaming bodies. [See here for an example from Thin.][thin_async]
-Be careful though: when running your app on Momentum, you are probably using an adapter.
-While the backend provides `:async` capabilities to the app, not all adapters do.
+First, as your app is most likely not asynchronous, the event loop of the SPDY server will be
+blocked when running your app's code. This can cause timeouts and will
+effectively make your SPDY sever synchronous.
 
-As your app is most likely not asynchronous, the event loop of the SPDY server will be
-blocked when running your app's code. This can cause timeouts and other problems, and will
-effectively make your SPDY sever synchronous, and you don't want that.
-In order to stay non-blocking, you should use an adapter to offload the app execution to somewhere
-else. If you're curious, you can try out what happens without an adapter by running
-`momentum --plain` in your app's directory.
+Second, SPDY is meant as a front-end protocol. Running your app on a front-end server will break
+when you need to scale.
+
+The recommended solution is simple: keep your existing HTTP infrastructure and backend servers,
+and use Momentum as a proxy to your backend servers, as described in the usage example above.
+
+
+### If you don't care about scaling
+Add the following to your app's `Gemfile`:
+
+    gem 'momentum', :git => 'git://github.com/jonasschneider/momentum.git', :submodules => true
+
+Then download the code and start the server by running:
+
+    $ bundle install
+    $ bundle exec momentum
+
+This will start momentum running your `config.ru` with the Defer adapter.
+This adapter (see below) will run your application code in a separate thread per request,
+so make sure it's threadsafe.
+If you're curious, you can try out what happens without an adapter (running your app directly
+in the event loop, no threads) by running `momentum --plain` in your app's directory.
 
 
 Adapters
@@ -129,7 +123,7 @@ to the current Chromium implementation), which contain the location of the reque
 
 Performance
 -----------
-This project is in development.
+This project is somewhat in development.
 Since one of the main goals of SPDY is to improve loading times, performance is considered vital for Momentum.
 I performed some totally unscientific performance tests. The app in question is located in `examples/lots_of_images.ru`.
 It displays a bare-bones HTML page, which in turn loads 100 thumbnail-sized JPEG images from the server.
